@@ -1078,7 +1078,7 @@ function initThreeJS(){
   for(var i=0;i<2;i++){
     var mesh=new THREE.Mesh(new THREE.BoxGeometry(DS,DS,DS),_makeMats(null));
     mesh.castShadow=true;mesh.receiveShadow=true;_threeScene.add(mesh);
-    var body=new CANNON.Body({mass:1,material:dM,linearDamping:0.25,angularDamping:0.20});
+    var body=new CANNON.Body({mass:1,material:dM,linearDamping:0.20,angularDamping:0.15});
     body.addShape(new CANNON.Box(new CANNON.Vec3(DS/2,DS/2,DS/2)));
     body.position.set(i===0?-1.5:1.5,0.5,0);
     _cannonWorld.addBody(body);
@@ -1177,7 +1177,7 @@ async function rollDice(){
         new CANNON.Vec3((tx2-sx)*1.6,-1.2,(tz-sz)*1.6),
         new CANNON.Vec3((Math.random()-.5)*0.85,(Math.random()-.5)*0.85,(Math.random()-.5)*0.85)
       );
-      d.angularVelocity.set((Math.random()-.5)*32,(Math.random()-.5)*32,(Math.random()-.5)*32);
+      d.angularVelocity.set((Math.random()-.5)*40,(Math.random()-.5)*40,(Math.random()-.5)*40);
       _diceMeshes[i].material=_makeMats(null);
     });
 
@@ -1201,17 +1201,15 @@ async function rollDice(){
     await new Promise(function(res){
       var chk=setInterval(function(){
         var ok=_dicePhysics.every(function(d){
-          return d.velocity.length()<0.1&&d.angularVelocity.length()<0.1&&d.position.y<1.0;
+          return d.velocity.length()<0.05&&d.angularVelocity.length()<0.05&&d.position.y<1.0;
         });
         if(ok){clearInterval(chk);res();}
       },200);
       setTimeout(function(){clearInterval(chk);res();},5000);
     });
 
-    // Sonuç yüzlerini göster
-    _diceMeshes[0].material=_makeMats(dice1);
-    _diceMeshes[1].material=_makeMats(dice2);
-
+    // Sonuç: kontrattan gelen dice1/dice2 değerlerini kullan
+    // Zarların görsel yüzü önemli değil — sadece alttaki sonuç doğru olsun
     var resEl=document.getElementById('dice-result');
     if(isDouble){
       resEl.style.color='#7c3aed';
