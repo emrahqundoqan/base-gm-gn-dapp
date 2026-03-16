@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Base Fun dApp</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%230052FF'/%3E%3Cpath d='M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12c5.435 0 10.035-3.6 11.5-8.571H16v-2.857h12.857a12 12 0 000-1.143H16v-2.857h11.5C26.035 7.6 21.435 4 16 4z' fill='white'/%3E%3C/svg%3E"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
@@ -454,11 +456,14 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
     <div class="irow"><span class="il">Kontrat</span><span class="iv" id="dice-addr">Deploy gerekli</span></div>
     <div class="irow" style="margin-bottom:14px"><span class="il">Maliyet</span><span class="iv" style="color:var(--blue);font-weight:600">0.00005 ETH</span></div>
 
-    <!-- Masa -->
-    <div style="background:linear-gradient(145deg,#1a7a42,#0d4a28);border-radius:20px;border:8px solid #8B6914;box-shadow:0 4px 0 #4a3008,inset 0 2px 8px rgba(0,0,0,.3);padding:28px 20px;margin-bottom:14px;display:flex;justify-content:center;align-items:center;gap:40px;min-height:160px">
-      <div id="d1" style="width:80px;height:80px;display:flex;align-items:center;justify-content:center"></div>
-      <div id="d2" style="width:80px;height:80px;display:flex;align-items:center;justify-content:center"></div>
+    <!-- 3D Masa -->
+    <div id="three-loading" style="text-align:center;padding:20px;font-size:13px;color:var(--tx2)">
+      3D motor yükleniyor...
+      <div style="margin-top:8px;height:3px;background:var(--bdr);border-radius:2px">
+        <div id="three-bar" style="height:100%;background:var(--blue);width:0%;transition:width .3s;border-radius:2px"></div>
+      </div>
     </div>
+    <canvas id="dice-canvas" style="border-radius:16px;border:6px solid #8B6914;box-shadow:0 4px 0 #4a3008;width:100%;display:none;margin-bottom:14px"></canvas>
 
     <div id="dice-result" style="text-align:center;min-height:40px;margin:10px 0;font-size:16px;font-weight:700"></div>
 
@@ -895,9 +900,264 @@ function clearSts(id) {
 function shA(a) { return a.slice(0, 6) + '...' + a.slice(-4); }
 function shH(h) { return h.slice(0, 10) + '...' + h.slice(-6); }
 
+// ════════════════════════════════════════════════
+// DICE CONFIG
+// ════════════════════════════════════════════════
+var DICE_CONTRACT = '0xB1c153F5b8eB0AB275c4ed721606D814750EFea9';
+var DICE_FEE = ethers.parseEther('0.00005');
+var DICE_ABI = [
+  'function rollDice() external payable',
+  'function getPlayerStats(address) view returns (uint256 xp, uint256 rolls, uint256 doubles, uint256 level)',
+  'function xpOf(address) view returns (uint256)',
+  'function rollCountOf(address) view returns (uint256)',
+  'function doubleCountOf(address) view returns (uint256)',
+  'function contractBalance() view returns (uint256)',
+  'function owner() view returns (address)',
+  'event DiceRolled(address indexed player, uint8 dice1, uint8 dice2, bool isDouble, uint256 xpEarned, uint256 totalXP)'
+];
+
+// ════════════════════════════════════════════════
+// THREE.JS + CANNON.JS ZAR MOTORU
+// ════════════════════════════════════════════════
+var _R=null,_SC=null,_CA=null,_W=null,_DP=[],_DM=[],_RDY=false;
+var _PP={
+  1:[[0,0]],
+  2:[[-0.27,-0.27],[0.27,0.27]],
+  3:[[-0.27,-0.27],[0,0],[0.27,0.27]],
+  4:[[-0.27,-0.27],[0.27,-0.27],[-0.27,0.27],[0.27,0.27]],
+  5:[[-0.27,-0.27],[0.27,-0.27],[0,0],[-0.27,0.27],[0.27,0.27]],
+  6:[[-0.27,-0.2],[0.27,-0.2],[-0.27,0],[0.27,0],[-0.27,0.2],[0.27,0.2]]
+};
+
+function _tex(val,hl){
+  var c=document.createElement('canvas');c.width=c.height=128;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle=hl?'#ede9fe':'#fff';
+  var r=16;ctx.beginPath();
+  ctx.moveTo(r,0);ctx.lineTo(128-r,0);ctx.quadraticCurveTo(128,0,128,r);
+  ctx.lineTo(128,128-r);ctx.quadraticCurveTo(128,128,128-r,128);
+  ctx.lineTo(r,128);ctx.quadraticCurveTo(0,128,0,128-r);
+  ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=hl?'#7c3aed':'#cbd5e1';ctx.lineWidth=4;ctx.stroke();
+  ctx.fillStyle=hl?'#7c3aed':'#1e293b';
+  (_PP[val]||[]).forEach(function(p){
+    ctx.beginPath();ctx.arc(64+p[0]*80,64+p[1]*80,10,0,Math.PI*2);ctx.fill();
+  });
+  var t=new THREE.CanvasTexture(c);t.needsUpdate=true;return t;
+}
+
+function _mats(hl){
+  return [2,5,3,4,1,6].map(function(v){
+    return new THREE.MeshLambertMaterial({map:_tex(v,v===hl)});
+  });
+}
+
+function _topFace(body){
+  var FN=[
+    {v:new CANNON.Vec3(1,0,0),val:2},{v:new CANNON.Vec3(-1,0,0),val:5},
+    {v:new CANNON.Vec3(0,1,0),val:3},{v:new CANNON.Vec3(0,-1,0),val:4},
+    {v:new CANNON.Vec3(0,0,1),val:1},{v:new CANNON.Vec3(0,0,-1),val:6}
+  ];
+  var up=new CANNON.Vec3(0,1,0),best=-Infinity,bv=1;
+  FN.forEach(function(f){var d=body.quaternion.vmult(f.v).dot(up);if(d>best){best=d;bv=f.val;}});
+  return bv;
+}
+
+function initThreeJS(){
+  if(typeof THREE==='undefined'||typeof CANNON==='undefined')return;
+  var cv=document.getElementById('dice-canvas');if(!cv)return;
+  cv.style.display='block';
+  var W=cv.parentElement.offsetWidth||360;
+  cv.width=W;cv.height=W;
+
+  _R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  _R.setSize(W,W);_R.shadowMap.enabled=true;_R.setClearColor(0x111110);
+  _SC=new THREE.Scene();
+  _CA=new THREE.OrthographicCamera(-5,5,5,-5,0.1,50);
+  _CA.position.set(0,14,0);_CA.lookAt(0,0,0);
+
+  _SC.add(new THREE.AmbientLight(0xffffff,0.7));
+  var sun=new THREE.DirectionalLight(0xfffaf0,0.9);
+  sun.position.set(3,12,4);sun.castShadow=true;
+  sun.shadow.mapSize.set(512,512);
+  sun.shadow.camera.left=-6;sun.shadow.camera.right=6;
+  sun.shadow.camera.top=6;sun.shadow.camera.bottom=-6;
+  sun.shadow.bias=-0.003;_SC.add(sun);
+
+  var floor=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshLambertMaterial({color:0x1a7a3c}));
+  floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;_SC.add(floor);
+
+  var em=new THREE.MeshLambertMaterial({color:0x7a5418});
+  var E=4.85;
+  [[0,0.2,E,10.3,0.4,0.3],[0,0.2,-E,10.3,0.4,0.3],[E,0.2,0,0.3,0.4,10.3],[-E,0.2,0,0.3,0.4,10.3]].forEach(function(d){
+    var m=new THREE.Mesh(new THREE.BoxGeometry(d[3],d[4],d[5]),em);m.position.set(d[0],d[1],d[2]);_SC.add(m);
+  });
+
+  _W=new CANNON.World();_W.gravity.set(0,-32,0);
+  _W.broadphase=new CANNON.NaiveBroadphase();_W.solver.iterations=20;
+  var gM=new CANNON.Material('g'),dM=new CANNON.Material('d');
+  var gb=new CANNON.Body({mass:0,material:gM});
+  gb.addShape(new CANNON.Plane());
+  gb.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+  _W.addBody(gb);
+  var WL=4.2,TH=2.0;
+  [[WL+TH/2,3,0,TH,6,12],[-WL-TH/2,3,0,TH,6,12],[0,3,WL+TH/2,12,6,TH],[0,3,-WL-TH/2,12,6,TH]].forEach(function(d){
+    var b=new CANNON.Body({mass:0});b.addShape(new CANNON.Box(new CANNON.Vec3(d[3]/2,d[4]/2,d[5]/2)));b.position.set(d[0],d[1],d[2]);_W.addBody(b);
+  });
+  _W.addContactMaterial(new CANNON.ContactMaterial(gM,dM,{friction:0.6,restitution:0.28}));
+  _W.addContactMaterial(new CANNON.ContactMaterial(dM,dM,{friction:0.5,restitution:0.32}));
+
+  var DS=0.85;_DP=[];_DM=[];
+  for(var i=0;i<2;i++){
+    var mesh=new THREE.Mesh(new THREE.BoxGeometry(DS,DS,DS),_mats(null));
+    mesh.castShadow=true;mesh.receiveShadow=true;_SC.add(mesh);
+    var body=new CANNON.Body({mass:1,material:dM,linearDamping:0.20,angularDamping:0.15});
+    body.addShape(new CANNON.Box(new CANNON.Vec3(DS/2,DS/2,DS/2)));
+    body.position.set(i===0?-1.5:1.5,0.5,0);_W.addBody(body);
+    _DP.push(body);_DM.push(mesh);
+  }
+
+  _RDY=true;
+  var ld=document.getElementById('three-loading');if(ld)ld.style.display='none';
+
+  var _lt=null;
+  function _anim(ts){
+    requestAnimationFrame(_anim);
+    if(_lt!==null){var dt=Math.min((ts-_lt)/1000,0.04);_W.step(1/60,dt,3);}
+    _lt=ts;
+    for(var i=0;i<2;i++){_DM[i].position.copy(_DP[i].position);_DM[i].quaternion.copy(_DP[i].quaternion);}
+    _R.render(_SC,_CA);
+  }
+  _anim();
+}
+
+function waitAndInitThree(){
+  var bar=document.getElementById('three-bar'),pct=0;
+  var lt=setInterval(function(){pct=Math.min(pct+15,88);if(bar)bar.style.width=pct+'%';},200);
+  function check(n){
+    if(typeof THREE!=='undefined'&&typeof CANNON!=='undefined'){
+      clearInterval(lt);if(bar)bar.style.width='100%';setTimeout(initThreeJS,200);return;
+    }
+    if(n>60){clearInterval(lt);return;}
+    setTimeout(function(){check(n+1);},150);
+  }
+  check(0);
+}
+
+function getLevel(xp){
+  if(xp>=50000)return{name:'👑 Elmas',color:'#06b6d4'};
+  if(xp>=10000)return{name:'💎 Platin',color:'#8b5cf6'};
+  if(xp>=5000) return{name:'🥇 Altin', color:'#f59e0b'};
+  if(xp>=1000) return{name:'🥈 Gumus',color:'#94a3b8'};
+  return{name:'🥉 Bronz',color:'#b45309'};
+}
+
+async function loadDiceStats(){
+  if(!acct)return;
+  document.getElementById('dice-addr').textContent=DICE_CONTRACT.slice(0,6)+'...'+DICE_CONTRACT.slice(-4);
+  try{
+    var ro=new ethers.JsonRpcProvider(CFG.RPC);
+    var dc=new ethers.Contract(DICE_CONTRACT,DICE_ABI,ro);
+    var stats=await dc.getPlayerStats(acct);
+    var xp=Number(stats[0]),rolls=Number(stats[1]),doubles=Number(stats[2]);
+    var lvl=getLevel(xp);
+    document.getElementById('xp-total').textContent=xp.toLocaleString();
+    document.getElementById('xp-total').style.color=lvl.color;
+    document.getElementById('xp-level').textContent=lvl.name;
+    document.getElementById('xp-level').style.color=lvl.color;
+    document.getElementById('dice-rolls').textContent=rolls;
+    document.getElementById('dice-doubles').textContent=doubles;
+    var xd=document.getElementById('gm-xp-display');
+    var xl=document.getElementById('gm-lvl-display');
+    if(xd)xd.textContent=xp.toLocaleString()+' XP';
+    if(xl){xl.textContent=lvl.name;xl.style.color=lvl.color;}
+  }catch(e){console.warn('dice stats:',e);}
+}
+
+var _FC=false;
+
+async function rollDice(){
+  if(!requireWlt('roll-sts'))return;
+  if(!_RDY){setSts('roll-sts','err','3D motor hazir degil, bekleyin.');return;}
+  var btn=document.getElementById('roll-btn');
+  btn.disabled=true;
+  document.getElementById('dice-result').textContent='';
+  try{
+    setSts('roll-sts','pnd','Imzalaniyor... (0.00005 ETH)');
+    var c=new ethers.Contract(DICE_CONTRACT,DICE_ABI,sgn);
+    var tx=await c.rollDice({value:DICE_FEE});
+    setSts('roll-sts','pnd','Zarlar havalaniyor...<a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shH(tx.hash)+'</a>');
+
+    // Fizik animasyonu
+    _FC=false;
+    _DP.forEach(function(d,i){
+      var sx=(i===0?-1:1)*(1.2+Math.random()*1.0);
+      var sz=(i===0?-1:1)*(1.2+Math.random()*1.0);
+      d.position.set(sx,3+Math.random()*0.8,sz);
+      d.velocity.set(0,0,0);d.angularVelocity.set(0,0,0);
+      d.quaternion.setFromEuler(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
+      d.wakeUp();
+      var tx2=(Math.random()-.5)*2,tz=(Math.random()-.5)*2;
+      d.applyImpulse(
+        new CANNON.Vec3((tx2-sx)*1.6,-1.2,(tz-sz)*1.6),
+        new CANNON.Vec3((Math.random()-.5)*0.4,(Math.random()-.5)*0.4,(Math.random()-.5)*0.4)
+      );
+      d.angularVelocity.set((Math.random()-.5)*40,(Math.random()-.5)*40,(Math.random()-.5)*40);
+      _DM[i].material=_mats(null);
+    });
+
+    var receipt=await tx.wait();
+
+    // Event oku
+    var iface=new ethers.Interface(DICE_ABI);
+    var dice1=1,dice2=1,isDouble=false,xpEarned=2;
+    for(var i=0;i<receipt.logs.length;i++){
+      try{
+        var parsed=iface.parseLog(receipt.logs[i]);
+        if(parsed&&parsed.name==='DiceRolled'){
+          dice1=Number(parsed.args[1]);dice2=Number(parsed.args[2]);
+          isDouble=Boolean(parsed.args[3]);xpEarned=isDouble?50:(dice1+dice2);
+          break;
+        }
+      }catch(e2){}
+    }
+
+    // Zarlar durana kadar bekle (max 5sn)
+    await new Promise(function(res){
+      var chk=setInterval(function(){
+        var ok=_DP.every(function(d){
+          return d.velocity.length()<0.05&&d.angularVelocity.length()<0.05&&d.position.y<1.0;
+        });
+        if(ok){clearInterval(chk);res();}
+      },200);
+      setTimeout(function(){clearInterval(chk);res();},5000);
+    });
+
+    if(_FC)return;_FC=true;
+    _DM[0].material=_mats(dice1);_DM[1].material=_mats(dice2);
+
+    var resEl=document.getElementById('dice-result');
+    if(isDouble){
+      resEl.style.color='#7c3aed';
+      resEl.textContent='🎊 ÇİFT! '+dice1+' + '+dice2+' = '+(dice1+dice2)+'  →  +50 XP!';
+      setSts('roll-sts','ok','🎊 Cift! +50 XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
+    }else{
+      resEl.style.color='';
+      resEl.textContent=dice1+' + '+dice2+' = '+(dice1+dice2)+'  →  +'+xpEarned+' XP';
+      setSts('roll-sts','ok','+'+xpEarned+' XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
+    }
+    await loadDiceStats();
+  }catch(e){
+    setSts('roll-sts','err','Hata: '+(e.reason||e.message||'').slice(0,120));
+  }
+  btn.disabled=false;
+}
+
+
 window.addEventListener('load', function() {
   setTimeout(function() { scanLegacy(); }, 300);
-  setTimeout(function() { initDiceSVG(); }, 400);
+  setTimeout(function() { waitAndInitThree(); }, 500);
 });
 </script>
 </body>
