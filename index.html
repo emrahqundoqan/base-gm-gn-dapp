@@ -380,9 +380,13 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
     <div class="irow" style="margin-bottom:14px"><span class="il">Maliyet</span><span class="iv" style="color:var(--blue);font-weight:600">0.00005 ETH</span></div>
 
     <div id="dice-display" style="display:flex;justify-content:center;align-items:center;gap:24px;padding:24px 0;margin-bottom:14px">
-      <div id="d1" style="width:72px;height:72px;background:var(--bg2);border:2px solid var(--bdr2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px">🎲</div>
+      <div id="d1" style="width:72px;height:72px;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 70 70" width="70" height="70"><rect x="2" y="2" width="66" height="66" rx="12" fill="#f8f8f7" stroke="#d1d5db" stroke-width="2"/><text x="35" y="42" text-anchor="middle" font-size="28" fill="#9ca3af">?</text></svg>
+      </div>
       <div style="font-size:24px;font-weight:700;color:var(--tx2)">vs</div>
-      <div id="d2" style="width:72px;height:72px;background:var(--bg2);border:2px solid var(--bdr2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px">🎲</div>
+      <div id="d2" style="width:72px;height:72px;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 70 70" width="70" height="70"><rect x="2" y="2" width="66" height="66" rx="12" fill="#f8f8f7" stroke="#d1d5db" stroke-width="2"/><text x="35" y="42" text-anchor="middle" font-size="28" fill="#9ca3af">?</text></svg>
+      </div>
     </div>
 
     <div id="dice-result" style="text-align:center;min-height:36px;margin-bottom:14px;font-size:15px;font-weight:600"></div>
@@ -858,10 +862,33 @@ var DICE_ABI = [
   'function doubleCountOf(address) view returns (uint256)',
   'function contractBalance() view returns (uint256)',
   'function withdraw() external',
-  'function owner() view returns (address)'
+  'function owner() view returns (address)',
+  'event DiceRolled(address indexed player, uint8 dice1, uint8 dice2, bool isDouble, uint256 xpEarned, uint256 totalXP)'
 ];
 
-var DICE_FACES = ['', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣'];
+
+// SVG Zar çizici
+function drawDice(el, num, highlight) {
+  var dots = {
+    1: [[35,35]],
+    2: [[18,18],[52,52]],
+    3: [[18,18],[35,35],[52,52]],
+    4: [[18,18],[52,18],[18,52],[52,52]],
+    5: [[18,18],[52,18],[35,35],[18,52],[52,52]],
+    6: [[18,15],[52,15],[18,35],[52,35],[18,55],[52,55]]
+  };
+  var color = highlight ? '#7c3aed' : '#1a1a18';
+  var bg    = highlight ? '#ede9fe' : '#f8f8f7';
+  var border= highlight ? '#7c3aed' : '#d1d5db';
+  var d = dots[num] || dots[1];
+  var circles = d.map(function(p) {
+    return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="6" fill="'+color+'"/>';
+  }).join('');
+  el.innerHTML = '<svg viewBox="0 0 70 70" width="70" height="70">'
+    + '<rect x="2" y="2" width="66" height="66" rx="12" fill="'+bg+'" stroke="'+border+'" stroke-width="2"/>'
+    + circles + '</svg>';
+}
+
 
 function getLevel(xp) {
   if (xp >= 50000) return { name:'👑 Elmas',  color:'#06b6d4' };
@@ -873,7 +900,7 @@ function getLevel(xp) {
 
 async function loadDiceStats() {
   if (!acct) return;
-  var isDicePlaceholder = DICE_CONTRACT === '0x0000000000000000000000000000000000000000';
+  var isDicePlaceholder = false;
   document.getElementById('dice-addr').textContent = isDicePlaceholder ? 'Deploy gerekli' : DICE_CONTRACT.slice(0,6)+'...'+DICE_CONTRACT.slice(-4);
   if (isDicePlaceholder) return;
   try {
@@ -889,12 +916,17 @@ async function loadDiceStats() {
     document.getElementById('dice-rolls').textContent = rolls;
     document.getElementById('dice-doubles').textContent = doubles;
     document.getElementById('xp-total').style.color = lvl.color;
+    // Ana sayfada XP goster
+    var xpDisp = document.getElementById('gm-xp-display');
+    var lvlDisp = document.getElementById('gm-lvl-display');
+    if (xpDisp) xpDisp.textContent = xp.toLocaleString() + ' XP';
+    if (lvlDisp) lvlDisp.textContent = lvl.name;
   } catch(e) { console.warn('dice stats:', e); }
 }
 
 async function rollDice() {
   if (!requireWlt('roll-sts')) return;
-  if (DICE_CONTRACT === '0x0000000000000000000000000000000000000000') {
+  if (DICE_CONTRACT === '0x1F0586558a51C50Fe07c6436e582902D721137cA') {
     setSts('roll-sts', 'err', 'DiceXP kontrati henuz deploy edilmedi!');
     return;
   }
@@ -917,9 +949,9 @@ async function rollDice() {
 
     // Zar animasyonu
     var animInterval = setInterval(function() {
-      d1el.textContent = DICE_FACES[Math.floor(Math.random()*6)+1];
-      d2el.textContent = DICE_FACES[Math.floor(Math.random()*6)+1];
-    }, 100);
+      drawDice(d1el, Math.floor(Math.random()*6)+1, false);
+      drawDice(d2el, Math.floor(Math.random()*6)+1, false);
+    }, 120);
 
     var receipt = await tx.wait();
     clearInterval(animInterval);
@@ -940,8 +972,8 @@ async function rollDice() {
       } catch(e) {}
     }
 
-    d1el.textContent = DICE_FACES[dice1] || dice1;
-    d2el.textContent = DICE_FACES[dice2] || dice2;
+    drawDice(d1el, dice1, isDouble);
+    drawDice(d2el, dice2, isDouble);
 
     if (isDouble) {
       d1el.style.border = '2px solid #7c3aed';
