@@ -927,8 +927,8 @@ async function loadHistory() {
 
   try {
     // Basescan API ile son 50 işlemi çek
-    var url = 'https://api.basescan.org/api?module=account&action=txlist&address=' + acct
-      + '&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=YourApiKeyToken';
+    var url = 'https://api.etherscan.io/v2/api?chainid=8453&module=account&action=txlist&address=' + acct
+      + '&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=6PAW3CPS38MMDFR4Z6HMZD48K4QWR4JWIS';
     var res = await fetch(url);
     var data = await res.json();
 
