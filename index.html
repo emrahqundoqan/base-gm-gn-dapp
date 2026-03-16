@@ -699,7 +699,7 @@ function doDisconnect() {
   btn.classList.remove('off');
   document.getElementById('bal-tag').style.display = 'none';
   document.getElementById('net-warn').classList.remove('on');
-  document.getElementById('owner-pnl').style.display = 'none';
+  var op=document.getElementById('owner-pnl'); if(op) op.style.display='none';
   document.getElementById('gm-total').textContent = '0';
   document.getElementById('gn-total').textContent = '0';
 }
@@ -818,7 +818,7 @@ async function sendGM() {
     await tx.wait();
     setSts('gm-sts', 'ok', 'GM gonderildi!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">Basescan</a>');
     cntGM++;
-    document.getElementById('s-gm').textContent = cntGM;
+    var sgm=document.getElementById('s-gm'); if(sgm) sgm.textContent = cntGM;
     await loadStats();
   } catch(e) {
     setSts('gm-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 120));
@@ -839,7 +839,7 @@ async function sendGN() {
     await tx.wait();
     setSts('gn-sts', 'ok', 'GN gonderildi!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">Basescan</a>');
     cntGN++;
-    document.getElementById('s-gn').textContent = cntGN;
+    var sgn2=document.getElementById('s-gn'); if(sgn2) sgn2.textContent = cntGN;
     await loadStats();
   } catch(e) {
     setSts('gn-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 120));
@@ -1034,10 +1034,8 @@ async function loadDiceStats(){
     document.getElementById('xp-level').style.color=lvl.color;
     document.getElementById('dice-rolls').textContent=rolls;
     document.getElementById('dice-doubles').textContent=doubles;
-    var xd=document.getElementById('gm-xp-display');
-    var xl=document.getElementById('gm-lvl-display');
-    if(xd)xd.textContent=xp.toLocaleString()+' XP';
-    if(xl){xl.textContent=lvl.name;xl.style.color=lvl.color;}
+    var xd=document.getElementById('gm-xp-display'); if(xd) xd.textContent=xp.toLocaleString()+' XP';
+    var xl=document.getElementById('gm-lvl-display'); if(xl){xl.textContent=lvl.name;xl.style.color=lvl.color;}
   }catch(e){console.warn('dice stats:',e);}
 }
 
@@ -1057,92 +1055,12 @@ async function loadDiceStats(){
     document.getElementById('xp-level').style.color=lvl.color;
     document.getElementById('dice-rolls').textContent=rolls;
     document.getElementById('dice-doubles').textContent=doubles;
-    var xd=document.getElementById('gm-xp-display');
-    var xl=document.getElementById('gm-lvl-display');
-    if(xd)xd.textContent=xp.toLocaleString()+' XP';
-    if(xl){xl.textContent=lvl.name;xl.style.color=lvl.color;}
+    var xd=document.getElementById('gm-xp-display'); if(xd) xd.textContent=xp.toLocaleString()+' XP';
+    var xl=document.getElementById('gm-lvl-display'); if(xl){xl.textContent=lvl.name;xl.style.color=lvl.color;}
   }catch(e){console.warn('dice stats:',e);}
 }
 
 var _FC=false;
-
-async function rollDice(){
-  if(!requireWlt('roll-sts'))return;
-  if(!_RDY){setSts('roll-sts','err','3D motor hazir degil, bekleyin.');return;}
-  var btn=document.getElementById('roll-btn');
-  btn.disabled=true;
-  document.getElementById('dice-result').textContent='';
-  try{
-    setSts('roll-sts','pnd','Imzalaniyor... (0.00005 ETH)');
-    var c=new ethers.Contract(DICE_CONTRACT,DICE_ABI,sgn);
-    var tx=await c.rollDice({value:DICE_FEE});
-    setSts('roll-sts','pnd','Zarlar havalaniyor...<a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shH(tx.hash)+'</a>');
-
-    // Fizik animasyonu
-    _FC=false;
-    _DP.forEach(function(d,i){
-      var sx=(i===0?-1:1)*(1.2+Math.random()*1.0);
-      var sz=(i===0?-1:1)*(1.2+Math.random()*1.0);
-      d.position.set(sx,3+Math.random()*0.8,sz);
-      d.velocity.set(0,0,0);d.angularVelocity.set(0,0,0);
-      d.quaternion.setFromEuler(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
-      d.wakeUp();
-      var tx2=(Math.random()-.5)*2,tz=(Math.random()-.5)*2;
-      d.applyImpulse(
-        new CANNON.Vec3((tx2-sx)*1.6,-1.2,(tz-sz)*1.6),
-        new CANNON.Vec3((Math.random()-.5)*0.4,(Math.random()-.5)*0.4,(Math.random()-.5)*0.4)
-      );
-      d.angularVelocity.set((Math.random()-.5)*40,(Math.random()-.5)*40,(Math.random()-.5)*40);
-      _DM[i].material=_mats(null);
-    });
-
-    var receipt=await tx.wait();
-
-    // Event oku
-    var iface=new ethers.Interface(DICE_ABI);
-    var dice1=1,dice2=1,isDouble=false,xpEarned=2;
-    for(var i=0;i<receipt.logs.length;i++){
-      try{
-        var parsed=iface.parseLog(receipt.logs[i]);
-        if(parsed&&parsed.name==='DiceRolled'){
-          dice1=Number(parsed.args[1]);dice2=Number(parsed.args[2]);
-          isDouble=Boolean(parsed.args[3]);xpEarned=isDouble?50:(dice1+dice2);
-          break;
-        }
-      }catch(e2){}
-    }
-
-    // Zarlar durana kadar bekle (max 5sn)
-    await new Promise(function(res){
-      var chk=setInterval(function(){
-        var ok=_DP.every(function(d){
-          return d.velocity.length()<0.05&&d.angularVelocity.length()<0.05&&d.position.y<1.0;
-        });
-        if(ok){clearInterval(chk);res();}
-      },200);
-      setTimeout(function(){clearInterval(chk);res();},5000);
-    });
-
-    if(_FC)return;_FC=true;
-    _DM[0].material=_mats(dice1);_DM[1].material=_mats(dice2);
-
-    var resEl=document.getElementById('dice-result');
-    if(isDouble){
-      resEl.style.color='#7c3aed';
-      resEl.textContent='🎊 ÇİFT! '+dice1+' + '+dice2+' = '+(dice1+dice2)+'  →  +50 XP!';
-      setSts('roll-sts','ok','🎊 Cift! +50 XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
-    }else{
-      resEl.style.color='';
-      resEl.textContent=dice1+' + '+dice2+' = '+(dice1+dice2)+'  →  +'+xpEarned+' XP';
-      setSts('roll-sts','ok','+'+xpEarned+' XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
-    }
-    await loadDiceStats();
-  }catch(e){
-    setSts('roll-sts','err','Hata: '+(e.reason||e.message||'').slice(0,120));
-  }
-  btn.disabled=false;
-}
-
 
 window.addEventListener('load', function() {
   setTimeout(function() { scanLegacy(); }, 300);
