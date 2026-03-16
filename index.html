@@ -1208,8 +1208,29 @@ async function rollDice(){
       setTimeout(function(){clearInterval(chk);res();},5000);
     });
 
-    // Sonuç: kontrattan gelen dice1/dice2 değerlerini kullan
-    // Zarların görsel yüzü önemli değil — sadece alttaki sonuç doğru olsun
+    // Fizik body'lerini durdur
+    _dicePhysics.forEach(function(d){
+      d.velocity.set(0,0,0);
+      d.angularVelocity.set(0,0,0);
+    });
+
+    // Kameraya göre doğru yüzü göster
+    // OrthographicCamera yukarıdan (0,14,0) bakıyor — +Y yukarı
+    // BoxGeometry yüz sırası: +X=2,-X=5,+Y=3,-Y=4,+Z=1,-Z=6
+    var FR={
+      1:{x:0,        y:0,          z:0},
+      2:{x:0,        y:-Math.PI/2, z:0},
+      3:{x:-Math.PI/2, y:0,        z:0},
+      4:{x:Math.PI/2,  y:0,        z:0},
+      5:{x:0,        y:Math.PI/2,  z:0},
+      6:{x:0,        y:Math.PI,    z:0}
+    };
+    var r1=FR[dice1]||FR[1], r2=FR[dice2]||FR[1];
+    _diceMeshes[0].rotation.set(r1.x,r1.y,r1.z);
+    _diceMeshes[1].rotation.set(r2.x,r2.y,r2.z);
+    _diceMeshes[0].material=_makeMats(dice1);
+    _diceMeshes[1].material=_makeMats(dice2);
+
     var resEl=document.getElementById('dice-result');
     if(isDouble){
       resEl.style.color='#7c3aed';
