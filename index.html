@@ -5,8 +5,6 @@
 <meta name="talentapp:project_verification" content="9ff456b07b51ebe380e8353a57b67874a40154f96c73c1fb40349ae7dc0ec398a9fccd1eb1c70b49b32225da4afb77e055bdcda23fe607ff7daeaa940b132c9f">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Base GM/GN dApp</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
@@ -959,168 +957,43 @@ var DICE_ABI = [
 ];
 
 
-// ── Three.js + Cannon.js Zar Motoru ─────────────────────────────────
-var _threeRenderer=null,_threeScene=null,_threeCamera=null;
-var _cannonWorld=null,_dicePhysics=[],_diceMeshes=[];
-var _threeReady=false;
-
-var _PP={
-  1:[[0,0]],
-  2:[[-0.27,-0.27],[0.27,0.27]],
-  3:[[-0.27,-0.27],[0,0],[0.27,0.27]],
-  4:[[-0.27,-0.27],[0.27,-0.27],[-0.27,0.27],[0.27,0.27]],
-  5:[[-0.27,-0.27],[0.27,-0.27],[0,0],[-0.27,0.27],[0.27,0.27]],
-  6:[[-0.27,-0.2],[0.27,-0.2],[-0.27,0],[0.27,0],[-0.27,0.2],[0.27,0.2]]
+// ── Basit SVG Zar Sistemi ─────────────────────────────────────────────
+var PP={
+  1:[[40,40]],
+  2:[[22,22],[58,58]],
+  3:[[22,22],[40,40],[58,58]],
+  4:[[22,22],[58,22],[22,58],[58,58]],
+  5:[[22,22],[58,22],[40,40],[22,58],[58,58]],
+  6:[[22,18],[58,18],[22,40],[58,40],[22,62],[58,62]]
 };
 
-function _makeTex(val,hl){
-  var c=document.createElement('canvas');c.width=c.height=256;
-  var ctx=c.getContext('2d');
-  ctx.fillStyle=hl?'#ede9fe':'#ffffff';
-  var r=40;ctx.beginPath();
-  ctx.moveTo(r,0);ctx.lineTo(256-r,0);ctx.quadraticCurveTo(256,0,256,r);
-  ctx.lineTo(256,256-r);ctx.quadraticCurveTo(256,256,256-r,256);
-  ctx.lineTo(r,256);ctx.quadraticCurveTo(0,256,0,256-r);
-  ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);
-  ctx.closePath();ctx.fill();
-  ctx.strokeStyle=hl?'#7c3aed':'#cbd5e1';ctx.lineWidth=8;ctx.stroke();
-  ctx.fillStyle=hl?'#7c3aed':'#1e293b';
-  (_PP[val]||[]).forEach(function(p){
-    ctx.beginPath();ctx.arc(128+p[0]*180,128+p[1]*180,22,0,Math.PI*2);ctx.fill();
-  });
-  return new THREE.CanvasTexture(c);
+function makeDiceSVG(val, hl){
+  var color  = hl ? '#7c3aed' : '#1e293b';
+  var bg     = hl ? '#ede9fe' : '#ffffff';
+  var border = hl ? '#7c3aed' : '#cbd5e1';
+  var shadow = hl ? 'filter:drop-shadow(0 0 10px #7c3aed);' : 'filter:drop-shadow(2px 3px 6px rgba(0,0,0,.4));';
+  var dots   = (PP[val]||[]).map(function(p){
+    return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" fill="'+color+'"/>';
+  }).join('');
+  return '<svg viewBox="0 0 80 80" width="80" height="80" style="'+shadow+'">'
+    +'<rect x="3" y="3" width="74" height="74" rx="14" fill="'+bg+'" stroke="'+border+'" stroke-width="2.5"/>'
+    +dots+'</svg>';
 }
 
-function _makeMats(hl){
-  return [2,5,3,4,1,6].map(function(v){
-    return new THREE.MeshLambertMaterial({map:_makeTex(v,v===hl)});
-  });
+function setDice(n, val, hl){
+  var el = document.getElementById('d'+n);
+  if(el) el.innerHTML = makeDiceSVG(val, hl);
 }
 
-function _topFace(body){
-  var FN=[
-    {v:new CANNON.Vec3(1,0,0),val:2},{v:new CANNON.Vec3(-1,0,0),val:5},
-    {v:new CANNON.Vec3(0,1,0),val:3},{v:new CANNON.Vec3(0,-1,0),val:4},
-    {v:new CANNON.Vec3(0,0,1),val:1},{v:new CANNON.Vec3(0,0,-1),val:6}
-  ];
-  var up=new CANNON.Vec3(0,1,0),best=-Infinity,bv=1;
-  FN.forEach(function(f){
-    var d=body.quaternion.vmult(f.v).dot(up);
-    if(d>best){best=d;bv=f.val;}
-  });
-  return bv;
+function initDiceSVG(){
+  setDice(1, 1, false);
+  setDice(2, 1, false);
 }
 
-function initThreeJS(){
-  if(typeof THREE==='undefined'||typeof CANNON==='undefined'){return;}
-  var cv=document.getElementById('dice-canvas');
-  if(!cv)return;
-  cv.style.display='block';
-  var W=cv.offsetWidth||cv.parentElement.offsetWidth||360;
-  cv.width=W;cv.height=W;
-
-  _threeRenderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
-  _threeRenderer.setSize(W,W);
-  _threeRenderer.shadowMap.enabled=true;
-  _threeRenderer.setClearColor(0x111110);
-
-  _threeScene=new THREE.Scene();
-  _threeCamera=new THREE.OrthographicCamera(-5,5,5,-5,0.1,50);
-  _threeCamera.position.set(0,14,0);
-  _threeCamera.lookAt(0,0,0);
-
-  _threeScene.add(new THREE.AmbientLight(0xffffff,0.65));
-  var sun=new THREE.DirectionalLight(0xfffaf0,1.0);
-  sun.position.set(4,14,5);sun.castShadow=true;
-  sun.shadow.mapSize.set(1024,1024);
-  sun.shadow.camera.left=-6;sun.shadow.camera.right=6;
-  sun.shadow.camera.top=6;sun.shadow.camera.bottom=-6;
-  sun.shadow.bias=-0.002;_threeScene.add(sun);
-
-  var floor=new THREE.Mesh(
-    new THREE.PlaneGeometry(10,10),
-    new THREE.MeshLambertMaterial({color:0x1a7a3c})
-  );
-  floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;_threeScene.add(floor);
-
-  var em=new THREE.MeshLambertMaterial({color:0x7a5418});
-  var E=4.85;
-  [[0,0.2,E,10.3,0.4,0.3],[0,0.2,-E,10.3,0.4,0.3],
-   [E,0.2,0,0.3,0.4,10.3],[-E,0.2,0,0.3,0.4,10.3]].forEach(function(d){
-    var m=new THREE.Mesh(new THREE.BoxGeometry(d[3],d[4],d[5]),em);
-    m.position.set(d[0],d[1],d[2]);_threeScene.add(m);
-  });
-
-  _cannonWorld=new CANNON.World();
-  _cannonWorld.gravity.set(0,-32,0);
-  _cannonWorld.broadphase=new CANNON.NaiveBroadphase();
-  _cannonWorld.solver.iterations=20;
-
-  var gM=new CANNON.Material('g'),dM=new CANNON.Material('d');
-  var gb=new CANNON.Body({mass:0,material:gM});
-  gb.addShape(new CANNON.Plane());
-  gb.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-  _cannonWorld.addBody(gb);
-
-  var WL=4.3,TH=1.0;
-  function addW(x,y,z,sx,sy,sz){
-    var b=new CANNON.Body({mass:0});
-    b.addShape(new CANNON.Box(new CANNON.Vec3(sx/2,sy/2,sz/2)));
-    b.position.set(x,y,z);_cannonWorld.addBody(b);
-  }
-  addW(WL+TH/2,2,0,TH,4,10);addW(-WL-TH/2,2,0,TH,4,10);
-  addW(0,2,WL+TH/2,10,4,TH);addW(0,2,-WL-TH/2,10,4,TH);
-
-  _cannonWorld.addContactMaterial(new CANNON.ContactMaterial(gM,dM,{friction:0.55,restitution:0.28}));
-  _cannonWorld.addContactMaterial(new CANNON.ContactMaterial(dM,dM,{friction:0.45,restitution:0.32}));
-
-  var DS=0.85;
-  _dicePhysics=[];_diceMeshes=[];
-  for(var i=0;i<2;i++){
-    var mesh=new THREE.Mesh(new THREE.BoxGeometry(DS,DS,DS),_makeMats(null));
-    mesh.castShadow=true;mesh.receiveShadow=true;_threeScene.add(mesh);
-    var body=new CANNON.Body({mass:1,material:dM,linearDamping:0.20,angularDamping:0.15});
-    body.addShape(new CANNON.Box(new CANNON.Vec3(DS/2,DS/2,DS/2)));
-    body.position.set(i===0?-1.5:1.5,0.5,0);
-    _cannonWorld.addBody(body);
-    _dicePhysics.push(body);_diceMeshes.push(mesh);
-  }
-
-  _threeReady=true;
-  var ld=document.getElementById('three-loading');
-  if(ld)ld.style.display='none';
-
-  var _lastT=null;
-  function _animate(ts){
-    requestAnimationFrame(_animate);
-    if(_lastT!==null){
-      var dt=Math.min((ts-_lastT)/1000,0.04);
-      _cannonWorld.step(1/60,dt,3);
-    }
-    _lastT=ts;
-    for(var i=0;i<2;i++){
-      _diceMeshes[i].position.copy(_dicePhysics[i].position);
-      _diceMeshes[i].quaternion.copy(_dicePhysics[i].quaternion);
-    }
-    _threeRenderer.render(_threeScene,_threeCamera);
-  }
-  _animate();
-}
-
-function waitAndInitThree(){
-  var bar=document.getElementById('three-bar');
-  var pct=0;
-  var lt=setInterval(function(){pct=Math.min(pct+15,88);if(bar)bar.style.width=pct+'%';},200);
-  function check(n){
-    if(typeof THREE!=='undefined'&&typeof CANNON!=='undefined'){
-      clearInterval(lt);if(bar)bar.style.width='100%';
-      setTimeout(initThreeJS,200);return;
-    }
-    if(n>60){clearInterval(lt);return;}
-    setTimeout(function(){check(n+1);},150);
-  }
-  check(0);
-}
+// Sallama animasyonu (CSS keyframe ile)
+var shakeStyle = document.createElement('style');
+shakeStyle.textContent = '@keyframes diceShake{0%,100%{transform:rotate(0deg) scale(1)}15%{transform:rotate(-15deg) scale(1.1)}30%{transform:rotate(12deg) scale(1.05)}45%{transform:rotate(-10deg) scale(1.08)}60%{transform:rotate(8deg) scale(1.05)}75%{transform:rotate(-5deg) scale(1.02)}90%{transform:rotate(3deg) scale(1)}}';
+document.head.appendChild(shakeStyle);
 
 function getLevel(xp){
   if(xp>=50000)return{name:'👑 Elmas',color:'#06b6d4'};
@@ -1154,33 +1027,26 @@ async function loadDiceStats(){
 
 async function rollDice(){
   if(!requireWlt('roll-sts'))return;
-  if(!_threeReady){setSts('roll-sts','err','3D motor hazir degil, bekleyin.');return;}
   var btn=document.getElementById('roll-btn');
   btn.disabled=true;
   document.getElementById('dice-result').textContent='';
+
+  // Sallama animasyonu başlat
+  var d1=document.getElementById('d1'), d2=document.getElementById('d2');
+  var animInterval=setInterval(function(){
+    setDice(1,Math.ceil(Math.random()*6),false);
+    setDice(2,Math.ceil(Math.random()*6),false);
+    d1.style.animation='none'; d1.offsetHeight;
+    d1.style.animation='diceShake '+(0.3+Math.random()*0.2)+'s ease-in-out';
+    d2.style.animation='none'; d2.offsetHeight;
+    d2.style.animation='diceShake '+(0.3+Math.random()*0.2)+'s ease-in-out';
+  },300);
 
   try{
     setSts('roll-sts','pnd','Imzalaniyor... (0.00005 ETH)');
     var c=new ethers.Contract(DICE_CONTRACT,DICE_ABI,sgn);
     var tx=await c.rollDice({value:DICE_FEE});
-    setSts('roll-sts','pnd','Zarlar havalaniyor...<a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shH(tx.hash)+'</a>');
-
-    // Fizik animasyonunu başlat
-    _dicePhysics.forEach(function(d,i){
-      var sx=(i===0?-1:1)*(1.5+Math.random()*1.5);
-      var sz=(i===0?-1:1)*(1.5+Math.random()*1.5);
-      d.position.set(sx,3.5+Math.random()*0.8,sz);
-      d.velocity.set(0,0,0);d.angularVelocity.set(0,0,0);
-      d.quaternion.setFromEuler(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
-      d.wakeUp();
-      var tx2=(Math.random()-.5)*2,tz=(Math.random()-.5)*2;
-      d.applyImpulse(
-        new CANNON.Vec3((tx2-sx)*1.6,-1.2,(tz-sz)*1.6),
-        new CANNON.Vec3((Math.random()-.5)*0.85,(Math.random()-.5)*0.85,(Math.random()-.5)*0.85)
-      );
-      d.angularVelocity.set((Math.random()-.5)*40,(Math.random()-.5)*40,(Math.random()-.5)*40);
-      _diceMeshes[i].material=_makeMats(null);
-    });
+    setSts('roll-sts','pnd','Onaylanıyor...<a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shH(tx.hash)+'</a>');
 
     var receipt=await tx.wait();
 
@@ -1191,46 +1057,21 @@ async function rollDice(){
       try{
         var parsed=iface.parseLog(receipt.logs[i]);
         if(parsed&&parsed.name==='DiceRolled'){
-          dice1=Number(parsed.args[1]);dice2=Number(parsed.args[2]);
-          isDouble=Boolean(parsed.args[3]);xpEarned=isDouble?50:(dice1+dice2);
+          dice1=Number(parsed.args[1]);
+          dice2=Number(parsed.args[2]);
+          isDouble=Boolean(parsed.args[3]);
+          xpEarned=isDouble?50:(dice1+dice2);
           break;
         }
       }catch(e2){}
     }
 
-    // Zarlar durana kadar bekle (max 5sn)
-    await new Promise(function(res){
-      var chk=setInterval(function(){
-        var ok=_dicePhysics.every(function(d){
-          return d.velocity.length()<0.05&&d.angularVelocity.length()<0.05&&d.position.y<1.0;
-        });
-        if(ok){clearInterval(chk);res();}
-      },200);
-      setTimeout(function(){clearInterval(chk);res();},5000);
-    });
-
-    // Fizik body'lerini durdur
-    _dicePhysics.forEach(function(d){
-      d.velocity.set(0,0,0);
-      d.angularVelocity.set(0,0,0);
-    });
-
-    // Kameraya göre doğru yüzü göster
-    // OrthographicCamera yukarıdan (0,14,0) bakıyor — +Y yukarı
-    // BoxGeometry yüz sırası: +X=2,-X=5,+Y=3,-Y=4,+Z=1,-Z=6
-    var FR={
-      1:{x:0,          y:Math.PI,    z:0},
-      2:{x:0,          y:Math.PI/2,  z:0},
-      3:{x:Math.PI/2,  y:0,          z:0},
-      4:{x:-Math.PI/2, y:0,          z:0},
-      5:{x:0,          y:-Math.PI/2, z:0},
-      6:{x:0,          y:0,          z:0}
-    };
-    var r1=FR[dice1]||FR[1], r2=FR[dice2]||FR[1];
-    _diceMeshes[0].rotation.set(r1.x,r1.y,r1.z);
-    _diceMeshes[1].rotation.set(r2.x,r2.y,r2.z);
-    _diceMeshes[0].material=_makeMats(dice1);
-    _diceMeshes[1].material=_makeMats(dice2);
+    // Animasyonu durdur, sonucu göster
+    clearInterval(animInterval);
+    d1.style.animation='none';
+    d2.style.animation='none';
+    setDice(1,dice1,isDouble);
+    setDice(2,dice2,isDouble);
 
     var resEl=document.getElementById('dice-result');
     if(isDouble){
@@ -1245,17 +1086,18 @@ async function rollDice(){
     addHist('deploy','Zar: '+dice1+'+'+dice2+(isDouble?' CIFT!':''),tx.hash);
     await loadDiceStats();
   }catch(e){
+    clearInterval(animInterval);
+    d1.style.animation='none';
+    d2.style.animation='none';
     setSts('roll-sts','err','Hata: '+(e.reason||e.message||'').slice(0,120));
   }
   btn.disabled=false;
 }
 
 
-
-
 window.addEventListener('load', function() {
   setTimeout(function() { scanLegacy(); }, 300);
-  setTimeout(function() { waitAndInitThree(); }, 500);
+  setTimeout(function() { initDiceSVG(); }, 400);
 });
 </script>
 </body>
