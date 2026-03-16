@@ -7,602 +7,770 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
-:root{
-  --base-blue:#0052FF;--base-blue-dark:#003dbf;--base-blue-light:#e6eeff;
-  --gm-gold:#F59E0B;--gm-gold-light:#FEF3C7;
-  --gn-purple:#7C3AED;--gn-purple-light:#EDE9FE;
-  --success:#10B981;--success-light:#D1FAE5;
-  --danger:#EF4444;--danger-light:#FEE2E2;
-  --warn:#F59E0B;--warn-light:#FEF9C3;
-  --bg:#ffffff;--bg2:#f8f8f7;
-  --border:rgba(0,0,0,.10);--border2:rgba(0,0,0,.18);
-  --text:#1a1a18;--text2:#6b6b67;
-  --r:12px;--rs:8px;
+:root {
+  --blue:#0052FF; --blue-dark:#003dbf; --blue-light:#e6eeff;
+  --gold:#F59E0B; --gold-light:#FEF3C7;
+  --purple:#7C3AED; --purple-light:#EDE9FE;
+  --green:#10B981; --green-light:#D1FAE5;
+  --red:#EF4444; --red-light:#FEE2E2;
+  --warn:#F59E0B; --warn-light:#FEF9C3;
+  --bg:#fff; --bg2:#f8f8f7;
+  --bdr:rgba(0,0,0,.10); --bdr2:rgba(0,0,0,.18);
+  --tx:#1a1a18; --tx2:#6b6b67;
+  --r:12px; --rs:8px;
 }
-@media(prefers-color-scheme:dark){:root{
-  --bg:#1a1a18;--bg2:#242421;
-  --border:rgba(255,255,255,.10);--border2:rgba(255,255,255,.18);
-  --text:#f0efea;--text2:#9c9a92;
-  --base-blue-light:#0f1e3d;--gm-gold-light:#2d1f00;
-  --gn-purple-light:#1e0a3c;--success-light:#042f1e;
-  --danger-light:#2d0a0a;--warn-light:#2d1f00;
-}}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.container{max-width:520px;margin:0 auto;padding:24px 16px 56px}
-.header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:.5px solid var(--border)}
-.logo{width:42px;height:42px;border-radius:50%;background:var(--base-blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo svg{width:24px;height:24px}
-.header-text h1{font-family:'Space Mono',monospace;font-size:17px;font-weight:700}
-.header-text p{font-size:12px;color:var(--text2);margin-top:2px}
-.net-badge{margin-left:auto;display:flex;align-items:center;gap:5px;background:var(--base-blue-light);color:var(--base-blue);font-size:11px;font-weight:500;padding:5px 10px;border-radius:20px;border:.5px solid #b3cbff;white-space:nowrap}
-.ndot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-.wallet-card{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
-.wallet-icon{width:38px;height:38px;border-radius:var(--rs);background:var(--base-blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.wallet-info{flex:1}
-.wallet-info .lbl{font-size:11px;color:var(--text2)}
-.wallet-info .addr{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:2px}
-.bal-tag{font-size:12px;color:var(--text2);font-family:'Space Mono',monospace;background:var(--bg);border:.5px solid var(--border2);padding:4px 10px;border-radius:20px;margin-right:6px;display:none}
-.btn-connect{background:var(--base-blue);color:#fff;border:none;padding:9px 16px;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s,transform .1s;white-space:nowrap}
-.btn-connect:hover{background:var(--base-blue-dark)}
-.btn-connect:active{transform:scale(.97)}
-.btn-connect.off{background:var(--danger)}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
-.modal-bg.show{opacity:1;pointer-events:all}
-.modal{background:var(--bg);border:.5px solid var(--border2);border-radius:16px;padding:24px;width:340px;max-width:90vw;transform:translateY(14px);transition:transform .2s;max-height:80vh;overflow-y:auto}
-.modal-bg.show .modal{transform:translateY(0)}
-.modal h2{font-size:16px;font-weight:600;margin-bottom:4px}
-.modal .sub{font-size:13px;color:var(--text2);margin-bottom:16px}
-.wallet-list{display:flex;flex-direction:column;gap:8px}
-.w-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:.5px solid var(--border2);border-radius:var(--rs);cursor:pointer;background:var(--bg2);transition:border-color .15s,background .15s}
-.w-opt:hover{border-color:var(--base-blue);background:var(--base-blue-light)}
-.w-opt img,.wico{width:36px;height:36px;border-radius:8px;flex-shrink:0;object-fit:cover}
-.wico{display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--bg);border:.5px solid var(--border)}
-.w-opt .wname{font-weight:600;font-size:14px}
-.w-opt .wrdns{font-size:11px;color:var(--text2);margin-top:2px}
-.w-opt .wbadge{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--success-light);color:#065F46;white-space:nowrap}
-.wc-badge{background:var(--base-blue-light)!important;color:var(--base-blue)!important}
-.divider{border-top:.5px solid var(--border);margin:10px 0}
-.no-wallet{text-align:center;padding:14px;font-size:13px;color:var(--text2)}
-.no-wallet a{color:var(--base-blue)}
-.modal-close{width:100%;padding:10px;border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;border-top:.5px solid var(--border);font-family:'DM Sans',sans-serif;margin-top:10px}
-.net-warn{background:var(--warn-light);border:.5px solid #fcd34d;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:#78350F;margin-bottom:14px;display:none;align-items:center;gap:8px}
-.net-warn.show{display:flex}
-.net-warn button{margin-left:auto;background:var(--warn);color:#78350F;border:none;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif}
-.tabs{display:flex;gap:3px;background:var(--bg2);border:.5px solid var(--border);border-radius:10px;padding:4px;margin-bottom:20px}
-.tab{flex:1;padding:9px 4px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text2);transition:all .18s}
-.tab.active{background:var(--bg);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.pane{display:none}.pane.active{display:block}
-.card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
-.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);margin-bottom:14px}
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:5px}
-.form-group input{width:100%;background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rs);padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color .15s}
-.form-group input:focus{border-color:var(--base-blue)}
-.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid var(--border);font-size:13px}
-.info-row:last-child{border-bottom:none}
-.il{color:var(--text2)}.iv{font-family:'Space Mono',monospace;font-size:12px}
-.fee-box{display:flex;justify-content:space-between;align-items:center;background:var(--gm-gold-light);border:.5px solid var(--gm-gold);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:13px}
-.fee-box.gn{background:var(--gn-purple-light);border-color:var(--gn-purple)}
-.fee-label{color:#78350F;font-weight:500}.fee-box.gn .fee-label{color:var(--gn-purple)}
-.fee-val{font-family:'Space Mono',monospace;font-weight:700;color:#78350F}.fee-box.gn .fee-val{color:var(--gn-purple)}
-.gas-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rs);padding:9px 13px;margin-bottom:14px}
-.gv{font-family:'Space Mono',monospace;color:var(--text)}
-.action-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px}
-.action-btn:active{transform:scale(.98)}
-.action-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btn-gm{background:var(--gm-gold);color:#78350F}.btn-gm:hover:not(:disabled){background:#d97706}
-.btn-gn{background:var(--gn-purple);color:#fff}.btn-gn:hover:not(:disabled){background:#6d28d9}
-.btn-deploy{background:var(--base-blue);color:#fff}.btn-deploy:hover:not(:disabled){background:var(--base-blue-dark)}
-.status{margin-top:14px;padding:12px 14px;border-radius:var(--rs);font-size:13px;display:none;align-items:flex-start;gap:9px;line-height:1.5}
-.status.show{display:flex}
-.status.pending{background:var(--warn-light);color:#78350F;border:.5px solid #fcd34d}
-.status.ok{background:var(--success-light);color:#065F46;border:.5px solid #6ee7b7}
-.status.err{background:var(--danger-light);color:#7F1D1D;border:.5px solid #fca5a5}
-.spin{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .65s linear infinite;flex-shrink:0;margin-top:1px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.stat-card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
-.stat-num{font-family:'Space Mono',monospace;font-size:38px;font-weight:700;line-height:1}
-.stat-lbl{font-size:12px;color:var(--text2);margin-top:6px}
+@media(prefers-color-scheme:dark) {
+  :root {
+    --bg:#1a1a18; --bg2:#242421;
+    --bdr:rgba(255,255,255,.10); --bdr2:rgba(255,255,255,.18);
+    --tx:#f0efea; --tx2:#9c9a92;
+    --blue-light:#0f1e3d; --gold-light:#2d1f00;
+    --purple-light:#1e0a3c; --green-light:#042f1e;
+    --red-light:#2d0a0a; --warn-light:#2d1f00;
+  }
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); min-height:100vh; }
+.wrap { max-width:520px; margin:0 auto; padding:24px 16px 56px; }
 
-/* Template cards */
-.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.tpl-card{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--rs);padding:14px;cursor:pointer;transition:all .18s;text-align:center}
-.tpl-card:hover{border-color:var(--base-blue);background:var(--base-blue-light)}
-.tpl-card.selected{border-color:var(--base-blue);background:var(--base-blue-light);box-shadow:0 0 0 2px rgba(0,82,255,.15)}
-.tpl-icon{font-size:28px;margin-bottom:6px}
-.tpl-name{font-size:13px;font-weight:600;color:var(--text)}
-.tpl-desc{font-size:11px;color:var(--text2);margin-top:3px}
+/* Header */
+.hdr { display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:.5px solid var(--bdr); }
+.logo { width:42px; height:42px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.logo svg { width:24px; height:24px; }
+.hdr-txt h1 { font-family:'Space Mono',monospace; font-size:17px; font-weight:700; }
+.hdr-txt p { font-size:12px; color:var(--tx2); margin-top:2px; }
+.net-pill { margin-left:auto; display:flex; align-items:center; gap:5px; background:var(--blue-light); color:var(--blue); font-size:11px; font-weight:500; padding:5px 10px; border-radius:20px; border:.5px solid #b3cbff; white-space:nowrap; }
+.dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-.tx-small{font-family:'Space Mono',monospace;font-size:11px;color:var(--base-blue);display:block;margin-top:3px}
-.hist-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border);font-size:13px}
-.hist-item:last-child{border-bottom:none}
-.hist-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.hi-gm{background:var(--gm-gold-light)}.hi-gn{background:var(--gn-purple-light)}.hi-dp{background:var(--base-blue-light)}
-.hist-info{flex:1}.hist-type{font-weight:500}.hist-sub{font-size:11px;color:var(--text2);margin-top:1px}
-.tx-link{font-family:'Space Mono',monospace;font-size:10px;color:var(--base-blue);text-decoration:none}
-.tx-link:hover{text-decoration:underline}
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
-.b-blue{background:var(--base-blue-light);color:var(--base-blue)}
-.b-green{background:var(--success-light);color:#065F46}
-.b-purple{background:var(--gn-purple-light);color:var(--gn-purple)}
-.owner-panel{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--r);padding:16px;margin-bottom:16px}
-.owner-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);margin-bottom:12px}
-.withdraw-btn{width:100%;padding:11px;border:none;border-radius:var(--rs);background:var(--success);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s}
-.withdraw-btn:hover{background:#059669}
+/* Wallet */
+.wlt-card { background:var(--bg2); border:.5px solid var(--bdr); border-radius:var(--r); padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.wlt-ico { width:38px; height:38px; border-radius:var(--rs); background:var(--blue); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.wlt-info { flex:1; }
+.wlt-info .lbl { font-size:11px; color:var(--tx2); }
+.wlt-info .adr { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; margin-top:2px; }
+.bal { font-size:12px; color:var(--tx2); font-family:'Space Mono',monospace; background:var(--bg); border:.5px solid var(--bdr2); padding:4px 10px; border-radius:20px; margin-right:6px; display:none; }
+.btn-con { background:var(--blue); color:#fff; border:none; padding:9px 16px; border-radius:var(--rs); font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .15s; white-space:nowrap; }
+.btn-con:hover { background:var(--blue-dark); }
+.btn-con.off { background:var(--red); }
+
+/* Modal */
+.mbg { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:9999; opacity:0; pointer-events:none; transition:opacity .2s; }
+.mbg.on { opacity:1; pointer-events:all; }
+.mdl { background:var(--bg); border:.5px solid var(--bdr2); border-radius:16px; padding:24px; width:340px; max-width:90vw; transform:translateY(14px); transition:transform .2s; max-height:80vh; overflow-y:auto; }
+.mbg.on .mdl { transform:translateY(0); }
+.mdl h2 { font-size:16px; font-weight:600; margin-bottom:4px; }
+.mdl p { font-size:13px; color:var(--tx2); margin-bottom:16px; }
+.wlt-lst { display:flex; flex-direction:column; gap:8px; }
+.wopt { display:flex; align-items:center; gap:12px; padding:12px 14px; border:.5px solid var(--bdr2); border-radius:var(--rs); cursor:pointer; background:var(--bg2); transition:border-color .15s,background .15s; }
+.wopt:hover { border-color:var(--blue); background:var(--blue-light); }
+.wico { width:36px; height:36px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--bg); border:.5px solid var(--bdr); }
+.wopt img { width:36px; height:36px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+.wopt .wnm { font-weight:600; font-size:14px; }
+.wopt .wrd { font-size:11px; color:var(--tx2); margin-top:2px; }
+.wopt .wbg { margin-left:auto; font-size:10px; padding:2px 8px; border-radius:10px; background:var(--green-light); color:#065F46; white-space:nowrap; }
+.wbg-b { background:var(--blue-light) !important; color:var(--blue) !important; }
+.mdl-div { border-top:.5px solid var(--bdr); margin:10px 0; }
+.no-wlt { text-align:center; padding:14px; font-size:13px; color:var(--tx2); }
+.no-wlt a { color:var(--blue); }
+.mdl-cls { width:100%; padding:10px; border:none; background:transparent; color:var(--tx2); font-size:13px; cursor:pointer; border-top:.5px solid var(--bdr); font-family:'DM Sans',sans-serif; margin-top:10px; }
+
+/* Net warn */
+.nwrn { background:var(--warn-light); border:.5px solid #fcd34d; border-radius:var(--rs); padding:11px 14px; font-size:13px; color:#78350F; margin-bottom:14px; display:none; align-items:center; gap:8px; }
+.nwrn.on { display:flex; }
+.nwrn button { margin-left:auto; background:var(--warn); color:#78350F; border:none; padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:600; font-family:'DM Sans',sans-serif; }
+
+/* Tabs */
+.tabs { display:flex; gap:3px; background:var(--bg2); border:.5px solid var(--bdr); border-radius:10px; padding:4px; margin-bottom:20px; }
+.tab { flex:1; padding:9px 4px; border:none; background:transparent; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; color:var(--tx2); transition:all .18s; }
+.tab.on { background:var(--bg); color:var(--tx); box-shadow:0 1px 4px rgba(0,0,0,.07); }
+.pane { display:none; }
+.pane.on { display:block; }
+
+/* Card */
+.card { background:var(--bg); border:.5px solid var(--bdr); border-radius:var(--r); padding:20px; margin-bottom:16px; }
+.ctitle { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:var(--tx2); margin-bottom:14px; }
+
+/* Form */
+.fgrp { margin-bottom:14px; }
+.fgrp label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--tx2); margin-bottom:5px; }
+.fgrp input { width:100%; background:var(--bg2); border:.5px solid var(--bdr2); border-radius:var(--rs); padding:10px 12px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--tx); outline:none; transition:border-color .15s; }
+.fgrp input:focus { border-color:var(--blue); }
+
+/* Info rows */
+.irow { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:.5px solid var(--bdr); font-size:13px; }
+.irow:last-child { border-bottom:none; }
+.il { color:var(--tx2); }
+.iv { font-family:'Space Mono',monospace; font-size:12px; }
+
+/* Fee boxes */
+.fbox { display:flex; justify-content:space-between; align-items:center; border-radius:var(--rs); padding:10px 14px; margin-bottom:14px; font-size:13px; }
+.fbox-gm { background:var(--gold-light); border:.5px solid var(--gold); }
+.fbox-gn { background:var(--purple-light); border:.5px solid var(--purple); }
+.fbox-dp { background:var(--blue-light); border:.5px solid #b3cbff; }
+.fl-gm { color:#78350F; font-weight:500; }
+.fl-gn { color:var(--purple); font-weight:500; }
+.fl-dp { color:var(--blue); font-weight:500; }
+.fv-gm { font-family:'Space Mono',monospace; font-weight:700; color:#78350F; }
+.fv-gn { font-family:'Space Mono',monospace; font-weight:700; color:var(--purple); }
+.fv-dp { font-family:'Space Mono',monospace; font-weight:700; color:var(--blue); }
+.grow { display:flex; justify-content:space-between; font-size:12px; color:var(--tx2); background:var(--bg2); border:.5px solid var(--bdr); border-radius:var(--rs); padding:9px 13px; margin-bottom:14px; }
+.gv { font-family:'Space Mono',monospace; color:var(--tx); }
+
+/* Buttons */
+.abtn { width:100%; padding:14px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .18s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.abtn:active { transform:scale(.98); }
+.abtn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+.abtn-gm { background:var(--gold); color:#78350F; }
+.abtn-gm:hover:not(:disabled) { background:#d97706; }
+.abtn-gn { background:var(--purple); color:#fff; }
+.abtn-gn:hover:not(:disabled) { background:#6d28d9; }
+.abtn-dp { background:var(--blue); color:#fff; }
+.abtn-dp:hover:not(:disabled) { background:var(--blue-dark); }
+
+/* Status */
+.sts { margin-top:14px; padding:12px 14px; border-radius:var(--rs); font-size:13px; display:none; align-items:flex-start; gap:9px; line-height:1.5; }
+.sts.on { display:flex; }
+.sts.pnd { background:var(--warn-light); color:#78350F; border:.5px solid #fcd34d; }
+.sts.ok { background:var(--green-light); color:#065F46; border:.5px solid #6ee7b7; }
+.sts.err { background:var(--red-light); color:#7F1D1D; border:.5px solid #fca5a5; }
+.spin { width:14px; height:14px; border-radius:50%; border:2px solid currentColor; border-top-color:transparent; animation:spin .65s linear infinite; flex-shrink:0; margin-top:1px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Stats */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.sc { background:var(--bg); border:.5px solid var(--bdr); border-radius:var(--r); padding:16px; text-align:center; }
+.sn { font-family:'Space Mono',monospace; font-size:38px; font-weight:700; line-height:1; }
+.sl { font-size:12px; color:var(--tx2); margin-top:6px; }
+
+/* Templates */
+.tgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+.tcard { background:var(--bg2); border:.5px solid var(--bdr2); border-radius:var(--rs); padding:14px; cursor:pointer; transition:all .18s; text-align:center; }
+.tcard:hover { border-color:var(--blue); background:var(--blue-light); }
+.tcard.on { border-color:var(--blue); background:var(--blue-light); box-shadow:0 0 0 2px rgba(0,82,255,.15); }
+.ticon { font-size:28px; margin-bottom:6px; }
+.tname { font-size:13px; font-weight:600; }
+.tdesc { font-size:11px; color:var(--tx2); margin-top:3px; }
+
+/* History */
+.hi { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:.5px solid var(--bdr); font-size:13px; }
+.hi:last-child { border-bottom:none; }
+.hico { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.hgm { background:var(--gold-light); }
+.hgn { background:var(--purple-light); }
+.hdp { background:var(--blue-light); }
+.hinfo { flex:1; }
+.htype { font-weight:500; }
+.hsub { font-size:11px; color:var(--tx2); margin-top:1px; }
+.txl { font-family:'Space Mono',monospace; font-size:10px; color:var(--blue); text-decoration:none; }
+.txl:hover { text-decoration:underline; }
+.txs { font-family:'Space Mono',monospace; font-size:11px; color:var(--blue); display:block; margin-top:3px; }
+.bdg { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:500; }
+.bb { background:var(--blue-light); color:var(--blue); }
+.bg { background:var(--green-light); color:#065F46; }
+.bp { background:var(--purple-light); color:var(--purple); }
+
+/* Owner */
+.opnl { background:var(--bg2); border:.5px solid var(--bdr2); border-radius:var(--r); padding:16px; margin-bottom:16px; }
+.otitle { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:var(--tx2); margin-bottom:12px; }
+.wbtn { width:100%; padding:11px; border:none; border-radius:var(--rs); background:var(--green); color:#fff; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.wbtn:hover { background:#059669; }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
-<div class="header">
+<div class="hdr">
   <div class="logo">
     <svg viewBox="0 0 32 32" fill="none">
       <circle cx="16" cy="16" r="14" fill="white"/>
       <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12c5.435 0 10.035-3.6 11.5-8.571H16v-2.857h12.857a12 12 0 000-1.143H16v-2.857h11.5C26.035 7.6 21.435 4 16 4z" fill="#0052FF"/>
     </svg>
   </div>
-  <div class="header-text">
+  <div class="hdr-txt">
     <h1>Base GM / GN</h1>
-    <p>Onchain Mesaj &amp; Kontrat Deploy</p>
+    <p>Onchain Mesaj ve Kontrat Deploy</p>
   </div>
-  <div class="net-badge">
-    <div class="ndot" id="net-dot"></div>
+  <div class="net-pill">
+    <div class="dot" id="net-dot"></div>
     <span id="net-name">Base Mainnet</span>
   </div>
 </div>
 
-<div class="net-warn" id="net-warn">
-  ⚠️ Cüzdanınızı <strong>Base Ağına</strong> (8453) geçirin.
-  <button onclick="switchToBase()">Ağı Geç</button>
+<div class="nwrn" id="net-warn">
+  Cuzdaninizi Base Agina (8453) gecirin.
+  <button onclick="switchToBase()">Agi Gec</button>
 </div>
 
-<div class="wallet-card">
-  <div class="wallet-icon">
+<div class="wlt-card">
+  <div class="wlt-ico">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <rect x="2" y="7" width="20" height="14" rx="3" stroke="white" stroke-width="1.5"/>
       <path d="M16 14a1 1 0 11-2 0 1 1 0 012 0z" fill="white"/>
       <path d="M22 11H2V9a2 2 0 012-2h14l4 4z" fill="white"/>
     </svg>
   </div>
-  <div class="wallet-info">
-    <div class="lbl" id="wallet-name-lbl">Cüzdan</div>
-    <div class="addr" id="wallet-addr">Bağlı değil</div>
+  <div class="wlt-info">
+    <div class="lbl" id="wlt-lbl">Cuzdan</div>
+    <div class="adr" id="wlt-adr">Bagli degil</div>
   </div>
-  <span class="bal-tag" id="bal-tag"></span>
-  <button class="btn-connect" id="connect-btn" onclick="openModal()">🔗 Bağlan</button>
+  <span class="bal" id="bal-tag"></span>
+  <button class="btn-con" id="con-btn" onclick="openModal()">Baglan</button>
 </div>
 
-<div class="modal-bg" id="modal-bg" onclick="bgClose(event)">
-  <div class="modal">
-    <h2>Cüzdan Seç</h2>
-    <div class="sub">Bağlanmak istediğiniz cüzdanı seçin</div>
-    <div class="wallet-list" id="wallet-list"></div>
-    <div class="divider"></div>
-    <div class="w-opt" onclick="connectWC()">
+<div class="mbg" id="modal-bg">
+  <div class="mdl">
+    <h2>Cuzdan Sec</h2>
+    <p>Baglanmak istediginiz cuzdani secin</p>
+    <div class="wlt-lst" id="wlt-lst"></div>
+    <div class="mdl-div"></div>
+    <div class="wopt" onclick="connectWC()">
       <div class="wico">🔗</div>
-      <div><div class="wname">WalletConnect</div><div class="wrdns">Mobil cüzdanlar için QR</div></div>
-      <span class="wbadge wc-badge">QR</span>
+      <div>
+        <div class="wnm">WalletConnect</div>
+        <div class="wrd">Mobil cuzdan QR</div>
+      </div>
+      <span class="wbg wbg-b">QR</span>
     </div>
-    <button class="modal-close" onclick="closeModal()">Kapat</button>
+    <button class="mdl-cls" onclick="closeModal()">Kapat</button>
   </div>
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('gm',this)">☀️ GM</button>
-  <button class="tab" onclick="switchTab('gn',this)">🌙 GN</button>
-  <button class="tab" onclick="switchTab('deploy',this)">🚀 Deploy</button>
-  <button class="tab" onclick="switchTab('history',this)">📜 Geçmiş</button>
+  <button class="tab on" id="tab-gm" onclick="switchTab('gm')">☀️ GM</button>
+  <button class="tab" id="tab-gn" onclick="switchTab('gn')">🌙 GN</button>
+  <button class="tab" id="tab-dp" onclick="switchTab('deploy')">🚀 Deploy</button>
+  <button class="tab" id="tab-hs" onclick="switchTab('history')">📜 Gecmis</button>
 </div>
 
 <!-- GM -->
-<div class="pane active" id="pane-gm">
-  <div class="two-col" style="margin-bottom:16px">
-    <div class="stat-card"><div class="stat-num" style="color:var(--gm-gold)" id="gm-total">—</div><div class="stat-lbl">Toplam GM</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--base-blue);font-size:28px;padding-top:6px" id="gm-streak">🔥 —</div><div class="stat-lbl">Gün Serisi</div></div>
+<div class="pane on" id="pane-gm">
+  <div class="g2" style="margin-bottom:16px">
+    <div class="sc"><div class="sn" style="color:var(--gold)" id="gm-total">0</div><div class="sl">Toplam GM</div></div>
+    <div class="sc"><div class="sn" style="color:var(--blue);font-size:28px;padding-top:6px" id="gm-streak">0 Gun</div><div class="sl">Seri</div></div>
   </div>
   <div class="card">
-    <div class="card-title">GM Gönder</div>
-    <div class="info-row"><span class="il">Kontrat</span><span class="iv">0xfDeb…111E</span></div>
-    <div class="info-row" style="margin-bottom:14px"><span class="il">Bugün GM</span><span id="gm-today">—</span></div>
-    <div class="form-group">
-      <label>Mesajınız (opsiyonel)</label>
-      <input type="text" id="gm-msg" placeholder="GM frens! 🌞" maxlength="280"/>
+    <div class="ctitle">GM Gonder</div>
+    <div class="irow"><span class="il">Kontrat</span><span class="iv">0xfDeb...111E</span></div>
+    <div class="irow" style="margin-bottom:14px"><span class="il">Bugun GM</span><span id="gm-today"><span class="bdg bb">Henuz yok</span></span></div>
+    <div class="fgrp">
+      <label>Mesajiniz (opsiyonel)</label>
+      <input type="text" id="gm-msg" placeholder="GM frens!" maxlength="280"/>
     </div>
-    <div class="fee-box"><span class="fee-label">💰 Servis Ücreti</span><span class="fee-val">0.00001 ETH</span></div>
-    <div class="gas-row"><span>⛽ + Gas</span><span class="gv">~0.0001 ETH</span></div>
-    <button class="action-btn btn-gm" id="gm-btn" onclick="sendGM()">☀️ GM Gönder</button>
-    <div class="status" id="gm-status"></div>
+    <div class="fbox fbox-gm"><span class="fl-gm">Servis Ucreti</span><span class="fv-gm">0.00001 ETH</span></div>
+    <div class="grow"><span>+ Gas</span><span class="gv">~0.0001 ETH</span></div>
+    <button class="abtn abtn-gm" id="gm-btn" onclick="sendGM()">☀️ GM Gonder</button>
+    <div class="sts" id="gm-sts"></div>
   </div>
 </div>
 
 <!-- GN -->
 <div class="pane" id="pane-gn">
-  <div class="two-col" style="margin-bottom:16px">
-    <div class="stat-card"><div class="stat-num" style="color:var(--gn-purple)" id="gn-total">—</div><div class="stat-lbl">Toplam GN</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--gn-purple);font-size:28px;padding-top:6px" id="gn-streak">🌙 —</div><div class="stat-lbl">Gün Serisi</div></div>
+  <div class="g2" style="margin-bottom:16px">
+    <div class="sc"><div class="sn" style="color:var(--purple)" id="gn-total">0</div><div class="sl">Toplam GN</div></div>
+    <div class="sc"><div class="sn" style="color:var(--purple);font-size:28px;padding-top:6px" id="gn-streak">0 Gun</div><div class="sl">Seri</div></div>
   </div>
   <div class="card">
-    <div class="card-title">GN Gönder</div>
-    <div class="info-row"><span class="il">Kontrat</span><span class="iv">0x5A4F…37B9</span></div>
-    <div class="info-row" style="margin-bottom:14px"><span class="il">Bugün GN</span><span id="gn-today">—</span></div>
-    <div class="form-group">
-      <label>Mesajınız (opsiyonel)</label>
-      <input type="text" id="gn-msg" placeholder="GN everyone! 🌙✨" maxlength="280"/>
+    <div class="ctitle">GN Gonder</div>
+    <div class="irow"><span class="il">Kontrat</span><span class="iv">0x5A4F...37B9</span></div>
+    <div class="irow" style="margin-bottom:14px"><span class="il">Bugun GN</span><span id="gn-today"><span class="bdg bp">Henuz yok</span></span></div>
+    <div class="fgrp">
+      <label>Mesajiniz (opsiyonel)</label>
+      <input type="text" id="gn-msg" placeholder="GN everyone!" maxlength="280"/>
     </div>
-    <div class="fee-box gn"><span class="fee-label">💰 Servis Ücreti</span><span class="fee-val">0.00001 ETH</span></div>
-    <div class="gas-row"><span>⛽ + Gas</span><span class="gv">~0.0001 ETH</span></div>
-    <button class="action-btn btn-gn" id="gn-btn" onclick="sendGN()">🌙 GN Gönder</button>
-    <div class="status" id="gn-status"></div>
+    <div class="fbox fbox-gn"><span class="fl-gn">Servis Ucreti</span><span class="fv-gn">0.00001 ETH</span></div>
+    <div class="grow"><span>+ Gas</span><span class="gv">~0.0001 ETH</span></div>
+    <button class="abtn abtn-gn" id="gn-btn" onclick="sendGN()">🌙 GN Gonder</button>
+    <div class="sts" id="gn-sts"></div>
   </div>
 </div>
 
 <!-- DEPLOY -->
 <div class="pane" id="pane-deploy">
   <div class="card">
-    <div class="card-title">Kontrat Şablonu Seç</div>
+    <div class="ctitle">Sablon Sec</div>
+    <div class="tgrid">
+      <div class="tcard" id="tpl-gm" onclick="selTpl('gm')"><div class="ticon">☀️</div><div class="tname">GM Kontrati</div><div class="tdesc">Gunluk GM + fee</div></div>
+      <div class="tcard" id="tpl-gn" onclick="selTpl('gn')"><div class="ticon">🌙</div><div class="tname">GN Kontrati</div><div class="tdesc">Gunluk GN + fee</div></div>
+      <div class="tcard" id="tpl-storage" onclick="selTpl('storage')"><div class="ticon">📦</div><div class="tname">Veri Saklama</div><div class="tdesc">Mesaj depolama</div></div>
+      <div class="tcard" id="tpl-counter" onclick="selTpl('counter')"><div class="ticon">🔢</div><div class="tname">Sayac</div><div class="tdesc">Onchain sayac</div></div>
+      <div class="tcard" id="tpl-donate" onclick="selTpl('donate')"><div class="ticon">💝</div><div class="tname">Bagis Kutusu</div><div class="tdesc">ETH bagis</div></div>
 
-    <div class="template-grid">
-      <div class="tpl-card" id="tpl-gm" onclick="selectTemplate('gm')">
-        <div class="tpl-icon">☀️</div>
-        <div class="tpl-name">GM Kontratı</div>
-        <div class="tpl-desc">Günlük GM + fee sistemi</div>
-      </div>
-      <div class="tpl-card" id="tpl-gn" onclick="selectTemplate('gn')">
-        <div class="tpl-icon">🌙</div>
-        <div class="tpl-name">GN Kontratı</div>
-        <div class="tpl-desc">Günlük GN + fee sistemi</div>
-      </div>
-      <div class="tpl-card" id="tpl-storage" onclick="selectTemplate('storage')">
-        <div class="tpl-icon">📦</div>
-        <div class="tpl-name">Veri Saklama</div>
-        <div class="tpl-desc">Mesaj/veri depolama</div>
-      </div>
-      <div class="tpl-card" id="tpl-counter" onclick="selectTemplate('counter')">
-        <div class="tpl-icon">🔢</div>
-        <div class="tpl-name">Sayaç</div>
-        <div class="tpl-desc">Onchain sayaç kontratı</div>
-      </div>
-      <div class="tpl-card" id="tpl-donate" onclick="selectTemplate('donate')">
-        <div class="tpl-icon">💝</div>
-        <div class="tpl-name">Bağış Kutusu</div>
-        <div class="tpl-desc">ETH bağış toplama</div>
-      </div>
-      <div class="tpl-card" id="tpl-whitelist" onclick="selectTemplate('whitelist')">
-        <div class="tpl-icon">✅</div>
-        <div class="tpl-name">Whitelist</div>
-        <div class="tpl-desc">Adres izin listesi</div>
-      </div>
     </div>
-
-    <div class="form-group">
-      <label>Kontrat Adı</label>
-      <input type="text" id="deploy-name" placeholder="örn: MyGMBot, DailyCounter…"/>
+    <div class="fgrp">
+      <label>Kontrat Adi (opsiyonel)</label>
+      <input type="text" id="dep-name" placeholder="ornek: MyGMBot"/>
     </div>
-
-    <div class="info-row" style="margin-bottom:14px">
-      <span class="il">Seçilen Şablon</span>
-      <span class="iv" id="selected-tpl-name">— Seçilmedi —</span>
-    </div>
-    <div class="info-row" style="margin-bottom:14px">
-      <span class="il">Network</span>
-      <span class="badge b-blue">Base Mainnet (8453)</span>
-    </div>
-
-    <button class="action-btn btn-deploy" id="dep-btn" onclick="deployTemplate()">🚀 Deploy Et</button>
-    <div class="status" id="dep-status"></div>
+    <div class="irow"><span class="il">Secilen Sablon</span><span class="iv" id="sel-tpl">Secilmedi</span></div>
+    <div class="irow"><span class="il">Network</span><span class="bdg bb">Base Mainnet</span></div>
+    <div class="irow" style="margin-bottom:14px"><span class="il">Deploy Ucreti</span><span class="iv" style="color:var(--blue);font-weight:600">0.0001 ETH</span></div>
+    <div class="fbox fbox-dp"><span class="fl-dp">Deploy Servis Ucreti</span><span class="fv-dp">0.0001 ETH</span></div>
+    <button class="abtn abtn-dp" id="dep-btn" onclick="deployTemplate()">🚀 Deploy Et</button>
+    <div class="sts" id="dep-sts"></div>
   </div>
-
   <div class="card" id="dep-result" style="display:none">
-    <div class="card-title">✅ Deploy Başarılı</div>
-    <div class="info-row"><span class="il">Kontrat</span><span class="iv" id="res-name">—</span></div>
-    <div class="info-row"><span class="il">Adres</span><span class="iv" id="res-addr" style="font-size:10px;word-break:break-all">—</span></div>
-    <div class="info-row"><span class="il">Tx</span><a class="tx-link" id="res-tx" target="_blank">—</a></div>
-    <div class="info-row"><span class="il">Network</span><span class="badge b-blue">Base Mainnet</span></div>
+    <div class="ctitle">Deploy Basarili</div>
+    <div class="irow"><span class="il">Kontrat</span><span class="iv" id="res-name">-</span></div>
+    <div class="irow"><span class="il">Adres</span><span class="iv" id="res-addr" style="font-size:10px;word-break:break-all">-</span></div>
+    <div class="irow"><span class="il">Tx</span><a class="txl" id="res-tx" target="_blank">-</a></div>
+    <div class="irow"><span class="il">Network</span><span class="bdg bb">Base Mainnet</span></div>
   </div>
 </div>
 
-<!-- History -->
+<!-- HISTORY -->
 <div class="pane" id="pane-history">
   <div class="card">
-    <div class="card-title">İşlem Geçmişi</div>
-    <div id="history-list"><p style="font-size:13px;color:var(--text2);text-align:center;padding:16px 0">Henüz işlem yok.</p></div>
+    <div class="ctitle">Islem Gecmisi</div>
+    <div id="hist-list"><p style="font-size:13px;color:var(--tx2);text-align:center;padding:16px 0">Henuz islem yok.</p></div>
   </div>
-  <div class="owner-panel" id="owner-panel" style="display:none">
-    <div class="owner-title">👑 Owner Paneli</div>
-    <div class="info-row"><span class="il">GM Bakiyesi</span><span class="iv" id="gm-balance">—</span></div>
-    <div class="info-row" style="margin-bottom:12px"><span class="il">GN Bakiyesi</span><span class="iv" id="gn-balance">—</span></div>
+  <div class="opnl" id="owner-pnl" style="display:none">
+    <div class="otitle">Owner Paneli</div>
+    <div class="irow"><span class="il">GM Bakiyesi</span><span class="iv" id="gm-bal">-</span></div>
+    <div class="irow" style="margin-bottom:12px"><span class="il">GN Bakiyesi</span><span class="iv" id="gn-bal">-</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button class="withdraw-btn" onclick="withdrawGM()">💰 GM Çek</button>
-      <button class="withdraw-btn" onclick="withdrawGN()">💰 GN Çek</button>
+      <button class="wbtn" onclick="doWithdraw('gm')">GM Cek</button>
+      <button class="wbtn" onclick="doWithdraw('gn')">GN Cek</button>
     </div>
-    <div class="status" id="withdraw-status"></div>
+    <div class="sts" id="wd-sts"></div>
   </div>
   <div class="card">
-    <div class="card-title">Oturum İstatistikleri</div>
-    <div class="two-col">
+    <div class="ctitle">Oturum</div>
+    <div class="g2">
       <div style="text-align:center;padding:12px 0">
-        <div style="font-size:28px;font-weight:700;font-family:'Space Mono',monospace;color:var(--gm-gold)" id="s-gm">0</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">GM Gönderilen</div>
+        <div style="font-size:28px;font-weight:700;font-family:'Space Mono',monospace;color:var(--gold)" id="s-gm">0</div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:4px">GM</div>
       </div>
       <div style="text-align:center;padding:12px 0">
-        <div style="font-size:28px;font-weight:700;font-family:'Space Mono',monospace;color:var(--gn-purple)" id="s-gn">0</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">GN Gönderilen</div>
+        <div style="font-size:28px;font-weight:700;font-family:'Space Mono',monospace;color:var(--purple)" id="s-gn">0</div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:4px">GN</div>
       </div>
     </div>
   </div>
 </div>
 
-</div>
+</div><!-- /wrap -->
 
 <script>
-const CFG = {
-  CHAIN_ID:8453, CHAIN_HEX:'0x2105',
-  RPC:'https://mainnet.base.org',
-  EXPLORER:'https://basescan.org',
-  GM_CONTRACT:'0xfDeb4a6C1f8a96D1817e29916047dEa53e70111E',
-  GN_CONTRACT:'0x5A4F2A0C1134efBCe9a4Debc7B000007Cdb637B9',
-};
-const FEE = ethers.parseEther('0.00001');
-const GM_ABI=['function gm(string calldata _message) external payable','function totalGMs() view returns (uint256)','function streakOf(address) view returns (uint256)','function hasSentGMToday(address) view returns (bool)','function contractBalance() view returns (uint256)','function withdraw() external','function owner() view returns (address)'];
-const GN_ABI=['function gn(string calldata _message) external payable','function totalGNs() view returns (uint256)','function streakOf(address) view returns (uint256)','function hasSentGNToday(address) view returns (bool)','function contractBalance() view returns (uint256)','function withdraw() external','function owner() view returns (address)'];
-
-// ── Hazır şablon bytecode'ları ──────────────────────────────────────────────
-// Her şablon için ABI + Bytecode (önceden derlenmiş)
-const TEMPLATES = {
-  gm: {
-    label:'GM Kontratı',
-    abi:['function gm(string calldata _msg) external payable','function totalGMs() view returns (uint256)','function withdraw() external','function owner() view returns (address)','function fee() view returns (uint256)'],
-    // Basit GM kontratı bytecode (solc 0.8.19, optimizer enabled)
-    bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556611c37937e0800060015561052e806100416000396000f3fe6080604052600436106100555760003560e01c80633ccfd60b1461005a5780638da5cb5b14610071578063a6f9dae11461009d578063b5f2bb11146100bd578063ddca3f43146100d2578063e3d55329146100e8575b600080fd5b34801561006657600080fd5b5061006f610108565b005b34801561007d57600080fd5b50600054604051600160a01b90910460001b81526020015b60405180910390f35b3480156100a957600080fd5b5061006f6100b8366004610390565b610165565b3480156100c957600080fd5b5060025461009590565b3480156100de57600080fd5b5060015461009590565b6100fb6100f63660046103ab565b6101b2565b005b6000546001600160a01b0316331461013b5760405162461bcd60e51b81526004016101329061042b565b60405180910390fd5b6040514790600090339083908381818185875af1925050503d806000811461017f576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e610184565b606091505b50509050806101a55760405162461bcd60e51b81526004016101329061046a565b50565b6000546001600160a01b031633146101c957600080fd5b600080546001600160a01b0319166001600160a01b0392909216919091179055565b6001543410156102105760405162461bcd60e51b8152600401610132906104a9565b6101208151111561022057600080fd5b600280546001019055336001600160a01b03167f5a6f3afe453c529c5e6b64b5e0ab6e54e72dc43f16f0eecf5a5c3e9a7bd71ca83426040516102639291906104e8565b60405180910390a2600154341115610310576000610281600154346105209190565b604051909150600090339083908381818185875af1925050503d80600081146102c6576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e6102cb565b606091505b50509050806103115760405162461bcd60e51b8152602060048201526012602482015271696e73756666696369656e742066756e647360701b6044820152606401610132565b505b50565b634e487b7160e01b600052604160045260246000fd5b600082601f83011261033b57600080fd5b813567ffffffffffffffff8082111561035657610356610314565b604051601f8301601f19908116603f0116810190828211818310171561037e5761037e610314565b8160405283815286602085880101111561039757600080fd5b836020870160208301376000602085830101528094505050505092915050565b6000602082840312156103a257600080fd5b813592505050565b6000602082840312156103bc57600080fd5b813567ffffffffffffffff8111156103d357600080fd5b6103df8482850161032a565b949350505050565b60005b838110156104025781810151838201526020016103ea565b50506000910152565b600081518084526104238160208601602086016103e7565b601f01601f19169290920160200192915050565b6020808252600b908201526a536164656365206f776e657260a81b604082015260600190565b6020808252600a908201526910a2a92fa2282aa9a4a760b11b604082015260600190565b60208082526010908201526f59657465727369seven206665657360801b604082015260600190565b6040815260006104da604083018561040b565b905060208301528392505050565b818103818111156105095763301234560e1b600052601160045260246000fd5b9291505056fea264697066735822122031c9d4d271df6d9b1d25bb8ce3ec9e1c9a4b3e19de4e6b2b4e5a0c8d4e5b7d8964736f6c63430008130033',
-  },
-  gn: {
-    label:'GN Kontratı',
-    abi:['function gn(string calldata _msg) external payable','function totalGNs() view returns (uint256)','function withdraw() external','function owner() view returns (address)'],
-    bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556611c37937e0800060015561052e806100416000396000f3fe6080604052600436106100555760003560e01c80633ccfd60b1461005a5780638da5cb5b14610071578063a6f9dae11461009d578063b5f2bb11146100bd578063ddca3f43146100d2578063f5d54b79146100e8575b600080fd5b34801561006657600080fd5b5061006f610108565b005b34801561007d57600080fd5b50600054604051600160a01b90910460001b81526020015b60405180910390f35b3480156100a957600080fd5b5061006f6100b8366004610390565b610165565b3480156100c957600080fd5b5060025461009590565b3480156100de57600080fd5b5060015461009590565b6100fb6100f63660046103ab565b6101b2565b005b6000546001600160a01b0316331461013b5760405162461bcd60e51b81526004016101329061042b565b60405180910390fd5b6040514790600090339083908381818185875af1925050503d806000811461017f576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e610184565b606091505b50509050806101a55760405162461bcd60e51b81526004016101329061046a565b50565b6000546001600160a01b031633146101c957600080fd5b600080546001600160a01b0319166001600160a01b0392909216919091179055565b6001543410156102105760405162461bcd60e51b8152600401610132906104a9565b6101208151111561022057600080fd5b600280546001019055336001600160a01b03167faa5f2a5b8db5e30754f7e8fbfb4db051dfcd0b6a8e2ae63022bb88d86b56f3083426040516102639291906104e8565b60405180910390a2600154341115610310576000610281600154346105209190565b604051909150600090339083908381818185875af1925050503d80600081146102c6576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e6102cb565b606091505b50509050806103115760405162461bcd60e51b8152602060048201526012602482015271696e73756666696369656e742066756e647360701b6044820152606401610132565b505b50565b634e487b7160e01b600052604160045260246000fd5b600082601f83011261033b57600080fd5b813567ffffffffffffffff8082111561035657610356610314565b604051601f8301601f19908116603f0116810190828211818310171561037e5761037e610314565b8160405283815286602085880101111561039757600080fd5b836020870160208301376000602085830101528094505050505092915050565b6000602082840312156103a257600080fd5b813592505050565b6000602082840312156103bc57600080fd5b813567ffffffffffffffff8111156103d357600080fd5b6103df8482850161032a565b949350505050565b60005b838110156104025781810151838201526020016103ea565b50506000910152565b600081518084526104238160208601602086016103e7565b601f01601f19169290920160200192915050565b6020808252600b908201526a536164656365206f776e657260a81b604082015260600190565b6020808252600a908201526910a2a92fa2282aa9a4a760b11b604082015260600190565b60208082526010908201526f59657465727369seven206665657360801b604082015260600190565b6040815260006104da604083018561040b565b905060208301528392505050565b818103818111156105095763301234560e1b600052601160045260246000fd5b9291505056fea264697066735822122031c9d4d271df6d9b1d25bb8ce3ec9e1c9a4b3e19de4e6b2b4e5a0c8d4e5b7d8964736f6c63430008130033',
-  },
-  storage: {
-    label:'Veri Saklama',
-    abi:['function store(string calldata _data) external','function retrieve() external view returns (string memory)','function owner() view returns (address)'],
-    bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556102e5806100326000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c80632e64cec1146100465780638da5cb5b1461006457806397cb81d414610090575b600080fd5b61004e6100a5565b60405161005b919061018d565b60405180910390f35b600054604051600160a01b90910460001b8152602001604051809103902060405161005b919061018d565b6100a361009e3660046101a7565b610137565b005b6060600180546100b490610220565b80601f01602080910402602001604051908101604052809291908190815260200182805461010881602002610220565b80156101015780601f106100d657610100808354040283529160200191610101565b820191906000526020600020905b8154815290600101906020018083116100e457829003601f168201915b5050505050905090565b80516101529060019060208401906101ca565b505050565b600082601f83011261016857600080fd5b815167ffffffffffffffff81111561018257610182610259565b50505050565b60208152600060208201835b838110156101a0578151835260209283019201610197565b5092915050565b6000602082840312156101b957600080fd5b813567ffffffffffffffff8111156101d057600080fd5b8201601f810184136101e157600080fd5b803567ffffffffffffffff8111156101fb576101fb610259565b604051601f8201601f19908116603f0116810190828211818310171561022357610223610259565b8160405282815287602084870101111561023c57600080fd5b826020860160208301376000928101602001929092525093949350505050565b634e487b7160e01b600052604160045260246000fd5b600181811c9082168061028657607f821691505b6020821081036102a657634e487b7160e01b600052602260045260246000fd5b5091905056fea264697066735822122071c3b2d6e18e3a4c1c5b2e1a6f3d4c2b1a0e9d8c7b6a5f4e3d2c1b0a9f8e7d664736f6c63430008130033',
-  },
-  counter: {
-    label:'Sayaç',
-    abi:['function increment() external','function decrement() external','function getCount() external view returns (uint256)','function reset() external','function owner() view returns (address)'],
-    bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556101e6806100326000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c80638da5cb5b1461005c5780639507d39a1461008857806395bc2673146100a4578063d09de08a146100ac578063d7bb99ba146100b4575b600080fd5b600054604051600160a01b90910460001b81526020015b60405180910390f35b6001545b604051908152602001610073565b6100aa6100bc565b005b6100aa6100e2565b6100aa6100f3565b6000546001600160a01b031633146100d357600080fd5b6000600155565b60016000808282546100f491906101a2565b9091555050565b60015460000361010357600080fd5b6001805460001901905550565b634e487b7160e01b600052604160045260246000fd5b600082601f83011261013757600080fd5b813567ffffffffffffffff81111561015157610151610110565b50505050565b60006020828403121561016957600080fd5b5035919050565b634e487b7160e01b600052601160045260246000fd5b808201808211156101985763ffffffff60e01b600052601160045260246000fd5b9291505056fea264697066735822122041c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b164736f6c63430008130033',
-  },
-  donate: {
-    label:'Bağış Kutusu',
-    abi:['function donate() external payable','function withdraw() external','function getBalance() external view returns (uint256)','function owner() view returns (address)'],
-    bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556101c2806100326000396000f3fe6080604052600436106100435760003560e01c80633ccfd60b146100485780638da5cb5b1461005f5780631a065c30146100885780634b0bddd21461009a575b600080fd5b34801561005457600080fd5b5061005d6100b0565b005b34801561006b57600080fd5b50600054604051600160a01b90910460001b81526020015b60405180910390f35b6040514781526020016100839190565b61009861009336600461017a565b6100fd565b005b3480156100a657600080fd5b504761009090565b6000546001600160a01b031633146100c757600080fd5b604051600090339047908381818185875af1925050503d806000811461010657604051601f3d011660208301604052906100fd565b606091505b5050505050565b3460000361010c57600080fd5b336001600160a01b03167f7a72d8f3e7b15c6a8a5b0f4d9c2e3b1a0e9d8c7b6a5f4e3d2c1b0a90847038234604051610148919087526020870152565b60405180910390a250565b600060208284031215610165578081fd5b81356001600160a01b038116811461017c57600080fd5b9392505050565b6000600160a08b1b038216600052600160a01b1f9050919050565b9291505056fea26469706673582212201a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f164736f6c63430008130033',
-  },
-  whitelist: {
-    label:'Whitelist',
-    abi:['function addToWhitelist(address _addr) external','function removeFromWhitelist(address _addr) external','function isWhitelisted(address _addr) external view returns (bool)','function owner() view returns (address)'],
-    bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556102a5806100326000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c80638da5cb5b1461005c578063a8507d7114610088578063b48af80e146100a4578063e43252d7146100b9578063f79fd408146100cc575b600080fd5b600054604051600160a01b90910460001b81526020015b60405180910390f35b34801561009457600080fd5b506100a261009f36600461021a565b50565b005b3480156100b057600080fd5b506100a261009f36600461021a565b005b3480156100c557600080fd5b506100a261009f565b3480156100d857600080fd5b506100f46100e736600461021a565b6001600160a01b031660009081526001602052604090205460ff1690565b604051901515815260200161007f565b6000546001600160a01b031633146100fe57600080fd5b6001600160a01b03811660009081526001602052604090819020805460ff19166001179055336001600160a01b03167f05cce69f5f9d25878e64f69f6caec7d37e8c97e6ab17ed3c52c617b80e2c3ce783604051610177919090815260200190565b60405180910390a250565b6000546001600160a01b031633146101ac57600080fd5b6001600160a01b03811660009081526001602052604090819020805460ff1916905550565b60006020828403121561022c57600080fd5b81356001600160a01b038116811461024357600080fd5b9392505050565b9291505056fea264697066735822122011a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f164736f6c63430008130033',
-  },
+var CFG = {
+  CHAIN_ID: 8453,
+  CHAIN_HEX: '0x2105',
+  RPC: 'https://mainnet.base.org',
+  EXPLORER: 'https://basescan.org',
+  GM: '0xfDeb4a6C1f8a96D1817e29916047dEa53e70111E',
+  GN: '0x5A4F2A0C1134efBCe9a4Debc7B000007Cdb637B9',
+  FEE_TO: '0xca37E522b57FEebc6f371EA500ecBf1e408FfD2c'
 };
 
-let selectedTemplate = null;
-let provider, signer, account, activeRawProvider;
-let sGM=0, sGN=0, histCount=0;
-const wallets = new Map();
+var GM_FEE = ethers.parseEther('0.00001');
+var DP_FEE = ethers.parseEther('0.0001');
 
-// Template seçimi
-function selectTemplate(key) {
-  selectedTemplate = key;
-  document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('tpl-'+key).classList.add('selected');
-  document.getElementById('selected-tpl-name').textContent = TEMPLATES[key].label;
-}
+var GM_ABI = [
+  'function gm(string calldata _message) external payable',
+  'function totalGMs() view returns (uint256)',
+  'function streakOf(address) view returns (uint256)',
+  'function hasSentGMToday(address) view returns (bool)',
+  'function contractBalance() view returns (uint256)',
+  'function withdraw() external',
+  'function owner() view returns (address)'
+];
 
-// Deploy
-async function deployTemplate() {
-  if (!reqW('dep-status')) return;
-  if (!selectedTemplate) { setSt('dep-status','err','❌ Önce bir şablon seçin!'); return; }
+var GN_ABI = [
+  'function gn(string calldata _message) external payable',
+  'function totalGNs() view returns (uint256)',
+  'function streakOf(address) view returns (uint256)',
+  'function hasSentGNToday(address) view returns (bool)',
+  'function contractBalance() view returns (uint256)',
+  'function withdraw() external',
+  'function owner() view returns (address)'
+];
 
-  const name = document.getElementById('deploy-name').value.trim() || TEMPLATES[selectedTemplate].label;
-  const tpl  = TEMPLATES[selectedTemplate];
-  const btn  = document.getElementById('dep-btn');
-  btn.disabled = true;
+var TPLS = {
+  gm:      { label:'GM Kontrati',  abi: GM_ABI, bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556611c37937e080006001556102b5806100406000396000f3fe6080604052600436106100555760003560e01c80633ccfd60b1461005a5780638da5cb5b14610071578063b5f2bb1114610097578063ddca3f43146100ac578063e3d553291461006f575b600080fd5b34801561006657600080fd5b5061006f6100c2565b005b34801561007d57600080fd5b506000546040516001600160a01b0390911681526020015b60405180910390f35b3480156100a357600080fd5b5060025461009590565b3480156100b857600080fd5b5060015461009590565b6100bf6100ba36600461019e565b610115565b005b6000546001600160a01b031633146100d957600080fd5b6040514790600090339083908381818185875af1925050503d806000811461011a576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e61011f565b606091505b505050505050565b60015434101561012457600080fd5b6101208151111561013457600080fd5b60028054600101905560405133907f5a6f3afe453c529c5e6b64b5e0ab6e54e72dc43f16f0eecf5a5c3e9a7bd71ca906101709084904290839061024e565b60405180910390a2600154341115610196576101916101899034600154610283565b3361019b565b505050565b6001546040516000916001600160a01b0385169183908381818185875af1925050503d80600081146101e0576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e6101e5565b606091505b5050905080610233576040516312171d8360e31b815260040160405180910390fd5b505050565b634e487b7160e01b600052604160045260246000fd5b6000602082840312156102135750600080fd5b813567ffffffffffffffff8111156102295750600080fd5b8201601f8101841361023a57600080fd5b803567ffffffffffffffff81111561025457610254610238565b50919050565b60608152600060608201845b8381101561027a5781518352602092830192016101ae565b509392505050565b8181038181111561029b57634e487b7160e01b600052601160045260246000fd5b9291505056fea264697066735822' },
+  gn:      { label:'GN Kontrati',  abi: GN_ABI, bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556611c37937e080006001556102b5806100406000396000f3fe6080604052600436106100555760003560e01c80633ccfd60b1461005a5780638da5cb5b14610071578063b5f2bb1114610097578063ddca3f43146100ac578063f5d54b791461006f575b600080fd5b34801561006657600080fd5b5061006f6100c2565b005b34801561007d57600080fd5b506000546040516001600160a01b0390911681526020015b60405180910390f35b3480156100a357600080fd5b5060025461009590565b3480156100b857600080fd5b5060015461009590565b6100bf6100ba36600461019e565b610115565b005b6000546001600160a01b031633146100d957600080fd5b6040514790600090339083908381818185875af1925050503d806000811461011a576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e61011f565b606091505b505050505050565b60015434101561012457600080fd5b6101208151111561013457600080fd5b60028054600101905560405133907faa5f2a5b8db5e30754f7e8fbfb4db051dfcd0b6a8e2ae63022bb88d86b56f30906101709084904290839061024e565b60405180910390a2600154341115610196576101916101899034600154610283565b3361019b565b505050565b6001546040516000916001600160a01b0385169183908381818185875af1925050503d80600081146101e0576040519150601f19603f3d011160208201604052908101601f191682016040523d82523d6000602084013e6101e5565b606091505b5050905080610233576040516312171d8360e31b815260040160405180910390fd5b505050565b634e487b7160e01b600052604160045260246000fd5b6000602082840312156102135750600080fd5b813567ffffffffffffffff8111156102295750600080fd5b8201601f8101841361023a57600080fd5b803567ffffffffffffffff81111561025457610254610238565b50919050565b60608152600060608201845b8381101561027a5781518352602092830192016101ae565b509392505050565b8181038181111561029b57634e487b7160e01b600052601160045260246000fd5b9291505056fea264697066735822' },
+  storage: { label:'Veri Saklama', abi: ['function store(string calldata _data) external','function retrieve() external view returns (string memory)','function owner() view returns (address)'], bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556102a1806100326000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c80632e64cec1146100465780638da5cb5b1461006457806397cb81d414610090575b600080fd5b61004e6100a5565b6040516100519190610185565b60405180910390f35b600054604051600160a01b90910460001b81526020015b60405180910390f35b61009e61009936600461019f565b610137565b005b606060018054610158906101f0565b80601f016020809104026020016040519081016040528092919081908152602001828054610184816101f05780156100fa57806020026020018201604052801561010d5780602002602001820160405280156100ec578082376000920191825250506040516100f89190610185565b820191906000526020600020905b81548152906001019060200180831161012657829003601f168201915b5050505050905090565b8051610152906001906020840190610155565b5050565b828054610161906101f057828601805480831161017e5780838355818111156101a0576000838152602090200190565b505b50505050565b634e487b7160e01b600052604160045260246000fd5b60006020828403121561023457600080fd5b813567ffffffffffffffff8111156102495750600080fd5b505050919050565b600181811c9082168061026857607f821691505b6020821081036102885763301234560e1b600052602260045260246000fd5b509190505056fea264697066735822' },
+  counter: { label:'Sayac',        abi: ['function increment() external','function decrement() external','function reset() external','function getCount() external view returns (uint256)','function owner() view returns (address)'], bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556101e6806100326000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c80638da5cb5b1461005c5780639507d39a1461008857806395bc26731461009e578063d09de08a146100a6578063d7bb99ba146100ae575b600080fd5b600054604051600160a01b90910460001b81526020015b60405180910390f35b6001545b604051908152602001610073565b6100ac6100b6565b005b6100ac6100da565b6100ac6100eb565b6000546001600160a01b031633146100cd57600080fd5b6000600155565b60016000808282546100ec91906101ab565b9091555050565b60015460000361010357600080fd5b6001805460001901905550565b634e487b7160e01b600052601160045260246000fd5b808201808211156101985763ffffffff60e01b600052601160045260246000fd5b9291505056fea264697066735822' },
+  donate:  { label:'Bagis Kutusu', abi: ['function donate() external payable','function withdraw() external','function getBalance() external view returns (uint256)','function owner() view returns (address)'], bytecode:'0x608060405234801561001057600080fd5b50600080546001600160a01b031916331790556101c2806100326000396000f3fe6080604052600436106100435760003560e01c80633ccfd60b146100485780638da5cb5b1461005f5780631a065c301461008b5780634b0bddd21461009d575b600080fd5b34801561005457600080fd5b5061005d6100b0565b005b34801561006b57600080fd5b506000546040516001600160a01b0390911681526020015b60405180910390f35b604051478152602001610083565b6100ab6100a636600461015e565b6100fd565b005b6000546001600160a01b031633146100c757600080fd5b6040514790600090339083908381818185875af1925050503d806000811461010357604051601f3d011660208301604052906100fd565b606091505b5050505050565b34600003610109575050565b336001600160a01b03167fef6efb7a4c45fd89a4f0d44059e22da63a0af8de02b7e1f5b8a8b87e64d3c3d34604051610144919081526020019150565b60405180910390a250565b6000602082840312156101705780fd5b81356001600160a01b03811681146101875780fd5b9392505050565b9291505056fea264697066735822' }
+};
 
-  try {
-    setSt('dep-status','pending','Kontrat oluşturuluyor…');
-    const factory = new ethers.ContractFactory(tpl.abi, tpl.bytecode, signer);
+var selTplKey = null;
+var prov = null;
+var sgn = null;
+var acct = null;
+var rawProv = null;
+var cntGM = 0;
+var cntGN = 0;
+var cntHist = 0;
+var wlts = {};
 
-    setSt('dep-status','pending','Cüzdan onayı bekleniyor…');
-    const contract = await factory.deploy();
-    const depTx = contract.deploymentTransaction();
-
-    setSt('dep-status','pending','Onay bekleniyor…<a class="tx-small" target="_blank" href="'+CFG.EXPLORER+'/tx/'+depTx.hash+'">'+shHash(depTx.hash)+' ↗</a>');
-    await contract.waitForDeployment();
-    const addr = await contract.getAddress();
-
-    setSt('dep-status','ok','🚀 Deploy başarılı!<a class="tx-small" target="_blank" href="'+CFG.EXPLORER+'/address/'+addr+'">Basescan\'da gör ↗</a>');
-
-    document.getElementById('res-name').textContent  = name;
-    document.getElementById('res-addr').textContent  = addr;
-    const tl = document.getElementById('res-tx');
-    tl.textContent = shHash(depTx.hash);
-    tl.href = CFG.EXPLORER+'/tx/'+depTx.hash;
-    document.getElementById('dep-result').style.display = 'block';
-
-    addHist('deploy', name, depTx.hash);
-
-  } catch(e) {
-    setSt('dep-status','err','❌ '+(e.reason||e.message||'Hata').slice(0,160));
-  } finally {
-    btn.disabled = false;
+function selTpl(key) {
+  selTplKey = key;
+  var cards = document.querySelectorAll('.tcard');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].classList.remove('on');
   }
+  document.getElementById('tpl-' + key).classList.add('on');
+  document.getElementById('sel-tpl').textContent = TPLS[key].label;
 }
 
-// EIP-6963
-window.addEventListener('eip6963:announceProvider', e => {
-  const { info, provider: p } = e.detail;
-  wallets.set(info.rdns, { info, provider: p });
-  if (document.getElementById('modal-bg').classList.contains('show')) renderList();
+function switchTab(name) {
+  var tabs = ['gm','gn','deploy','history'];
+  var ids  = ['tab-gm','tab-gn','tab-dp','tab-hs'];
+  for (var i = 0; i < tabs.length; i++) {
+    document.getElementById('tab-' + (i===0?'gm':i===1?'gn':i===2?'dp':'hs')).classList.remove('on');
+    document.getElementById('pane-' + tabs[i]).classList.remove('on');
+  }
+  document.getElementById('pane-' + name).classList.add('on');
+  var tabId = name==='gm'?'tab-gm':name==='gn'?'tab-gn':name==='deploy'?'tab-dp':'tab-hs';
+  document.getElementById(tabId).classList.add('on');
+}
+
+function openModal() {
+  if (acct) { doDisconnect(); return; }
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+  scanLegacy();
+  renderWallets();
+  document.getElementById('modal-bg').classList.add('on');
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('on');
+}
+
+document.getElementById('modal-bg').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
 });
-window.dispatchEvent(new Event('eip6963:requestProvider'));
 
 function scanLegacy() {
   if (!window.ethereum) return;
-  const list = window.ethereum.providers || [window.ethereum];
-  const checks = [
-    {key:'isMetaMask',name:'MetaMask',rdns:'io.metamask',emoji:'🦊',extra:p=>!p.isBraveWallet&&!p.isCoinbaseWallet},
-    {key:'isCoinbaseWallet',name:'Coinbase Wallet',rdns:'com.coinbase.wallet',emoji:'🔵'},
-    {key:'isBitKeep',name:'Bitget Wallet',rdns:'com.bitget.web3',emoji:'🟢'},
-    {key:'isBitgetWallet',name:'Bitget Wallet',rdns:'com.bitget.web3',emoji:'🟢'},
-    {key:'isOKExWallet',name:'OKX Wallet',rdns:'com.okex.wallet',emoji:'⚫'},
-    {key:'isRabby',name:'Rabby Wallet',rdns:'io.rabby',emoji:'🐰'},
-    {key:'isTrust',name:'Trust Wallet',rdns:'com.trustwallet.app',emoji:'🛡️'},
-    {key:'isBraveWallet',name:'Brave Wallet',rdns:'com.brave.wallet',emoji:'🦁'},
+  var list = window.ethereum.providers ? window.ethereum.providers : [window.ethereum];
+  var checks = [
+    { key:'isMetaMask',      name:'MetaMask',       rdns:'io.metamask',         emoji:'🦊' },
+    { key:'isCoinbaseWallet',name:'Coinbase Wallet', rdns:'com.coinbase.wallet', emoji:'🔵' },
+    { key:'isBitKeep',       name:'Bitget Wallet',   rdns:'com.bitget.web3',     emoji:'🟢' },
+    { key:'isBitgetWallet',  name:'Bitget Wallet',   rdns:'com.bitget.web3',     emoji:'🟢' },
+    { key:'isOKExWallet',    name:'OKX Wallet',      rdns:'com.okex.wallet',     emoji:'⚫' },
+    { key:'isTrust',         name:'Trust Wallet',    rdns:'com.trustwallet.app', emoji:'🛡️' },
+    { key:'isBraveWallet',   name:'Brave Wallet',    rdns:'com.brave.wallet',    emoji:'🦁' }
   ];
-  list.forEach(p => {
-    checks.forEach(c => {
-      if (p[c.key]&&(!c.extra||c.extra(p))&&!wallets.has(c.rdns))
-        wallets.set(c.rdns,{info:{name:c.name,rdns:c.rdns,icon:null,emoji:c.emoji},provider:p,legacy:true});
-    });
-  });
-  if (wallets.size===0&&window.ethereum)
-    wallets.set('browser.wallet',{info:{name:'Tarayıcı Cüzdanı',rdns:'browser.wallet',icon:null,emoji:'🌐'},provider:window.ethereum,legacy:true});
-}
-
-function openModal(){if(account){disconnect();return;}window.dispatchEvent(new Event('eip6963:requestProvider'));scanLegacy();renderList();document.getElementById('modal-bg').classList.add('show');}
-function closeModal(){document.getElementById('modal-bg').classList.remove('show');}
-function bgClose(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
-
-function renderList(){
-  const list=document.getElementById('wallet-list');
-  if(wallets.size===0){list.innerHTML=`<div class="no-wallet">Cüzdan bulunamadı.<br><br><a href="https://metamask.io" target="_blank">MetaMask ↗</a> &nbsp;<a href="https://www.coinbase.com/wallet" target="_blank">Coinbase ↗</a></div>`;return;}
-  list.innerHTML='';
-  const iconMap={'io.metamask':'🦊','com.coinbase.wallet':'🔵','com.bitget.web3':'🟢','com.okex.wallet':'⚫','io.rabby':'🐰','com.trustwallet.app':'🛡️','com.brave.wallet':'🦁'};
-  wallets.forEach((detail,rdns)=>{
-    const{info}=detail;const el=document.createElement('div');el.className='w-opt';el.onclick=()=>connectWith(rdns);
-    const emoji=iconMap[rdns]||info.emoji||'💼';
-    const imgTag=info.icon?`<img src="${info.icon}" class="wico" alt="${info.name}" onerror="this.outerHTML='<div class=wico>${emoji}</div>'">`:`<div class="wico">${emoji}</div>`;
-    el.innerHTML=`${imgTag}<div><div class="wname">${info.name}</div><div class="wrdns">${rdns}</div></div><span class="wbadge">Bağlan</span>`;
-    list.appendChild(el);
-  });
-}
-
-async function connectWith(rdns){
-  closeModal();const detail=wallets.get(rdns);if(!detail)return;const rawProv=detail.provider;
-  try{
-    setSt('gm-status','pending','Cüzdan bağlanıyor…');
-    await rawProv.request({method:'eth_requestAccounts'});
-    provider=new ethers.BrowserProvider(rawProv);signer=await provider.getSigner();account=await signer.getAddress();activeRawProvider=rawProv;
-    document.getElementById('wallet-addr').textContent=shAddr(account);
-    document.getElementById('wallet-name-lbl').textContent=detail.info.name;
-    const btn=document.getElementById('connect-btn');btn.textContent='🔌 Kes';btn.classList.add('off');
-    clearSt('gm-status');
-    rawProv.on?.('chainChanged',()=>location.reload());
-    rawProv.on?.('accountsChanged',a=>{if(!a.length)location.reload();});
-    await checkNetwork(rawProv);await loadBalance();await loadStats();await checkOwner();
-  }catch(e){clearSt('gm-status');if(e.code!==4001)setSt('gm-status','err','❌ '+(e.message||'Bağlantı hatası').slice(0,80));}
-}
-function connectWC(){closeModal();alert('WalletConnect için @walletconnect/web3-provider ekleyin.');}
-function disconnect(){
-  account=null;signer=null;provider=null;activeRawProvider=null;
-  document.getElementById('wallet-addr').textContent='Bağlı değil';
-  document.getElementById('wallet-name-lbl').textContent='Cüzdan';
-  const btn=document.getElementById('connect-btn');btn.textContent='🔗 Bağlan';btn.classList.remove('off');
-  document.getElementById('bal-tag').style.display='none';
-  document.getElementById('net-warn').classList.remove('show');
-  document.getElementById('owner-panel').style.display='none';
-  ['gm-total','gm-streak','gn-total','gn-streak'].forEach(id=>document.getElementById(id).textContent='—');
-}
-async function checkNetwork(rawProv){
-  try{
-    const chainId=parseInt(await rawProv.request({method:'eth_chainId'}),16);
-    const warn=document.getElementById('net-warn'),dot=document.getElementById('net-dot'),nm=document.getElementById('net-name');
-    if(chainId===CFG.CHAIN_ID){warn.classList.remove('show');dot.style.background='var(--success)';nm.textContent='Base Mainnet';}
-    else if(chainId===84532){warn.classList.remove('show');dot.style.background='var(--warn)';nm.textContent='Base Sepolia';}
-    else{warn.classList.add('show');dot.style.background='var(--danger)';nm.textContent='Yanlış Ağ (#'+chainId+')';}
-  }catch{}
-}
-async function switchToBase(){
-  const p=activeRawProvider||window.ethereum;if(!p)return;
-  try{await p.request({method:'wallet_switchEthereumChain',params:[{chainId:CFG.CHAIN_HEX}]});}
-  catch(e){if(e.code===4902)await p.request({method:'wallet_addEthereumChain',params:[{chainId:CFG.CHAIN_HEX,chainName:'Base',nativeCurrency:{name:'ETH',symbol:'ETH',decimals:18},rpcUrls:['https://mainnet.base.org'],blockExplorerUrls:['https://basescan.org']}]});}
-}
-async function loadBalance(){try{const bal=await provider.getBalance(account);const tag=document.getElementById('bal-tag');tag.textContent=parseFloat(ethers.formatEther(bal)).toFixed(4)+' ETH';tag.style.display='inline-block';}catch{}}
-async function loadStats(){
-  if(!account)return;
-  try{
-    const ro=new ethers.JsonRpcProvider(CFG.RPC);
-    const gmC=new ethers.Contract(CFG.GM_CONTRACT,GM_ABI,ro);
-    const gnC=new ethers.Contract(CFG.GN_CONTRACT,GN_ABI,ro);
-    const[gt,gs,gd,nt,ns,nd]=await Promise.all([gmC.totalGMs(),gmC.streakOf(account),gmC.hasSentGMToday(account),gnC.totalGNs(),gnC.streakOf(account),gnC.hasSentGNToday(account)]);
-    document.getElementById('gm-total').textContent=gt.toString();
-    document.getElementById('gm-streak').textContent='🔥 '+gs.toString();
-    document.getElementById('gn-total').textContent=nt.toString();
-    document.getElementById('gn-streak').textContent='🌙 '+ns.toString();
-    document.getElementById('gm-today').innerHTML=gd?'<span class="badge b-green">✓ Gönderildi</span>':'<span class="badge b-blue">Henüz yok</span>';
-    document.getElementById('gn-today').innerHTML=nd?'<span class="badge b-green">✓ Gönderildi</span>':'<span class="badge b-purple">Henüz yok</span>';
-  }catch(e){console.warn('stats:',e);}
-}
-async function checkOwner(){
-  try{
-    const ro=new ethers.JsonRpcProvider(CFG.RPC);
-    const gmC=new ethers.Contract(CFG.GM_CONTRACT,GM_ABI,ro);
-    const gnC=new ethers.Contract(CFG.GN_CONTRACT,GN_ABI,ro);
-    const[gmOwner,gnOwner,gmBal,gnBal]=await Promise.all([gmC.owner(),gnC.owner(),gmC.contractBalance(),gnC.contractBalance()]);
-    if(account.toLowerCase()===gmOwner.toLowerCase()||account.toLowerCase()===gnOwner.toLowerCase()){
-      document.getElementById('owner-panel').style.display='block';
-      document.getElementById('gm-balance').textContent=parseFloat(ethers.formatEther(gmBal)).toFixed(6)+' ETH';
-      document.getElementById('gn-balance').textContent=parseFloat(ethers.formatEther(gnBal)).toFixed(6)+' ETH';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    for (var j = 0; j < checks.length; j++) {
+      var c = checks[j];
+      if (p[c.key] && !wlts[c.rdns]) {
+        wlts[c.rdns] = { info: { name:c.name, rdns:c.rdns, icon:null, emoji:c.emoji }, provider: p };
+      }
     }
-  }catch(e){console.warn('owner:',e);}
+  }
+  if (Object.keys(wlts).length === 0 && window.ethereum) {
+    wlts['browser'] = { info: { name:'Tarayici Cuzdani', rdns:'browser', icon:null, emoji:'🌐' }, provider: window.ethereum };
+  }
 }
-async function withdrawGM(){try{setSt('withdraw-status','pending','GM fee çekiliyor…');const c=new ethers.Contract(CFG.GM_CONTRACT,GM_ABI,signer);const tx=await c.withdraw();await tx.wait();setSt('withdraw-status','ok','✅ GM bakiyesi çekildi!');await checkOwner();}catch(e){setSt('withdraw-status','err','❌ '+(e.reason||e.message||'Hata').slice(0,100));}}
-async function withdrawGN(){try{setSt('withdraw-status','pending','GN fee çekiliyor…');const c=new ethers.Contract(CFG.GN_CONTRACT,GN_ABI,signer);const tx=await c.withdraw();await tx.wait();setSt('withdraw-status','ok','✅ GN bakiyesi çekildi!');await checkOwner();}catch(e){setSt('withdraw-status','err','❌ '+(e.reason||e.message||'Hata').slice(0,100));}}
-async function sendGM(){
-  if(!reqW('gm-status'))return;
-  const msg=document.getElementById('gm-msg').value.trim();
-  const btn=document.getElementById('gm-btn');btn.disabled=true;
-  try{
-    setSt('gm-status','pending','İşlem imzalanıyor… (0.00001 ETH fee)');
-    const c=new ethers.Contract(CFG.GM_CONTRACT,GM_ABI,signer);
-    const tx=await c.gm(msg,{value:FEE});
-    setSt('gm-status','pending','Onay bekleniyor…<a class="tx-small" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shHash(tx.hash)+' ↗</a>');
+
+window.addEventListener('eip6963:announceProvider', function(e) {
+  var info = e.detail.info;
+  var p = e.detail.provider;
+  wlts[info.rdns] = { info: info, provider: p };
+  if (document.getElementById('modal-bg').classList.contains('on')) renderWallets();
+});
+window.dispatchEvent(new Event('eip6963:requestProvider'));
+
+function renderWallets() {
+  var lst = document.getElementById('wlt-lst');
+  var keys = Object.keys(wlts);
+  if (keys.length === 0) {
+    lst.innerHTML = '<div class="no-wlt">Cuzdan bulunamadi.<br><br><a href="https://metamask.io" target="_blank">MetaMask</a> veya <a href="https://www.coinbase.com/wallet" target="_blank">Coinbase Wallet</a> yukleyin.</div>';
+    return;
+  }
+  lst.innerHTML = '';
+  var iconMap = {
+    'io.metamask':'🦊','com.coinbase.wallet':'🔵','com.bitget.web3':'🟢',
+    'com.okex.wallet':'⚫','io.rabby':'🐰','com.trustwallet.app':'🛡️','com.brave.wallet':'🦁'
+  };
+  for (var rdns in wlts) {
+    var w = wlts[rdns];
+    var el = document.createElement('div');
+    el.className = 'wopt';
+    el.setAttribute('data-rdns', rdns);
+    var emoji = iconMap[rdns] || w.info.emoji || '💼';
+    var iconHtml = w.info.icon
+      ? '<img src="' + w.info.icon + '" onerror="this.parentNode.innerHTML=\'<div class=wico>' + emoji + '</div>\'">'
+      : '<div class="wico">' + emoji + '</div>';
+    el.innerHTML = iconHtml + '<div><div class="wnm">' + w.info.name + '</div><div class="wrd">' + rdns + '</div></div><span class="wbg">Baglan</span>';
+    el.addEventListener('click', function() {
+      connectWith(this.getAttribute('data-rdns'));
+    });
+    lst.appendChild(el);
+  }
+}
+
+function connectWC() {
+  closeModal();
+  alert('WalletConnect icin projenize @walletconnect/web3-provider ekleyin.');
+}
+
+async function connectWith(rdns) {
+  closeModal();
+  var w = wlts[rdns];
+  if (!w) return;
+  var rp = w.provider;
+  try {
+    setSts('gm-sts', 'pnd', 'Cuzdan baglanıyor...');
+    await rp.request({ method: 'eth_requestAccounts' });
+    prov = new ethers.BrowserProvider(rp);
+    sgn  = await prov.getSigner();
+    acct = await sgn.getAddress();
+    rawProv = rp;
+    document.getElementById('wlt-adr').textContent = shA(acct);
+    document.getElementById('wlt-lbl').textContent = w.info.name;
+    var btn = document.getElementById('con-btn');
+    btn.textContent = 'Kes';
+    btn.classList.add('off');
+    clearSts('gm-sts');
+    if (rp.on) {
+      rp.on('chainChanged', function() { location.reload(); });
+      rp.on('accountsChanged', function(a) { if (!a.length) location.reload(); });
+    }
+    await checkNet(rp);
+    await loadBal();
+    await loadStats();
+    await checkOwner();
+  } catch(e) {
+    clearSts('gm-sts');
+    if (e.code !== 4001) setSts('gm-sts', 'err', 'Hata: ' + (e.message || 'bilinmiyor').slice(0, 80));
+  }
+}
+
+function doDisconnect() {
+  acct = null; sgn = null; prov = null; rawProv = null;
+  document.getElementById('wlt-adr').textContent = 'Bagli degil';
+  document.getElementById('wlt-lbl').textContent = 'Cuzdan';
+  var btn = document.getElementById('con-btn');
+  btn.textContent = 'Baglan';
+  btn.classList.remove('off');
+  document.getElementById('bal-tag').style.display = 'none';
+  document.getElementById('net-warn').classList.remove('on');
+  document.getElementById('owner-pnl').style.display = 'none';
+  document.getElementById('gm-total').textContent = '0';
+  document.getElementById('gn-total').textContent = '0';
+}
+
+async function checkNet(rp) {
+  try {
+    var chainId = parseInt(await rp.request({ method: 'eth_chainId' }), 16);
+    var warn = document.getElementById('net-warn');
+    var dot  = document.getElementById('net-dot');
+    var nm   = document.getElementById('net-name');
+    if (chainId === CFG.CHAIN_ID) {
+      warn.classList.remove('on');
+      dot.style.background = 'var(--green)';
+      nm.textContent = 'Base Mainnet';
+    } else if (chainId === 84532) {
+      warn.classList.remove('on');
+      dot.style.background = 'var(--warn)';
+      nm.textContent = 'Base Sepolia';
+    } else {
+      warn.classList.add('on');
+      dot.style.background = 'var(--red)';
+      nm.textContent = 'Yanlis Ag (#' + chainId + ')';
+    }
+  } catch(e) {}
+}
+
+async function switchToBase() {
+  var p = rawProv || window.ethereum;
+  if (!p) return;
+  try {
+    await p.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CFG.CHAIN_HEX }] });
+  } catch(e) {
+    if (e.code === 4902) {
+      await p.request({ method: 'wallet_addEthereumChain', params: [{
+        chainId: CFG.CHAIN_HEX, chainName: 'Base',
+        nativeCurrency: { name:'ETH', symbol:'ETH', decimals:18 },
+        rpcUrls: ['https://mainnet.base.org'],
+        blockExplorerUrls: ['https://basescan.org']
+      }]});
+    }
+  }
+}
+
+async function loadBal() {
+  try {
+    var b = await prov.getBalance(acct);
+    var tag = document.getElementById('bal-tag');
+    tag.textContent = parseFloat(ethers.formatEther(b)).toFixed(4) + ' ETH';
+    tag.style.display = 'inline-block';
+  } catch(e) {}
+}
+
+async function loadStats() {
+  if (!acct) return;
+  try {
+    var ro  = new ethers.JsonRpcProvider(CFG.RPC);
+    var gmC = new ethers.Contract(CFG.GM, GM_ABI, ro);
+    var gnC = new ethers.Contract(CFG.GN, GN_ABI, ro);
+    var res = await Promise.all([
+      gmC.totalGMs(), gmC.streakOf(acct), gmC.hasSentGMToday(acct),
+      gnC.totalGNs(), gnC.streakOf(acct), gnC.hasSentGNToday(acct)
+    ]);
+    document.getElementById('gm-total').textContent  = res[0].toString();
+    document.getElementById('gm-streak').textContent = res[1].toString() + ' Gun';
+    document.getElementById('gn-total').textContent  = res[3].toString();
+    document.getElementById('gn-streak').textContent = res[4].toString() + ' Gun';
+    document.getElementById('gm-today').innerHTML = res[2]
+      ? '<span class="bdg bg">Gonderildi</span>'
+      : '<span class="bdg bb">Henuz yok</span>';
+    document.getElementById('gn-today').innerHTML = res[5]
+      ? '<span class="bdg bg">Gonderildi</span>'
+      : '<span class="bdg bp">Henuz yok</span>';
+  } catch(e) { console.warn('stats err:', e); }
+}
+
+async function checkOwner() {
+  try {
+    var ro  = new ethers.JsonRpcProvider(CFG.RPC);
+    var gmC = new ethers.Contract(CFG.GM, GM_ABI, ro);
+    var gnC = new ethers.Contract(CFG.GN, GN_ABI, ro);
+    var res = await Promise.all([gmC.owner(), gnC.owner(), gmC.contractBalance(), gnC.contractBalance()]);
+    var isOwner = acct.toLowerCase() === res[0].toLowerCase() || acct.toLowerCase() === res[1].toLowerCase();
+    if (isOwner) {
+      document.getElementById('owner-pnl').style.display = 'block';
+      document.getElementById('gm-bal').textContent = parseFloat(ethers.formatEther(res[2])).toFixed(6) + ' ETH';
+      document.getElementById('gn-bal').textContent = parseFloat(ethers.formatEther(res[3])).toFixed(6) + ' ETH';
+    }
+  } catch(e) { console.warn('owner err:', e); }
+}
+
+async function doWithdraw(which) {
+  try {
+    setSts('wd-sts', 'pnd', 'Fee cekiliyor...');
+    var abi  = which === 'gm' ? GM_ABI : GN_ABI;
+    var addr = which === 'gm' ? CFG.GM : CFG.GN;
+    var c    = new ethers.Contract(addr, abi, sgn);
+    var tx   = await c.withdraw();
     await tx.wait();
-    setSt('gm-status','ok','☀️ GM başarıyla gönderildi!<a class="tx-small" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan\'da gör ↗</a>');
-    sGM++;document.getElementById('s-gm').textContent=sGM;addHist('gm',msg||'GM!',tx.hash);await loadStats();
-  }catch(e){setSt('gm-status','err','❌ '+(e.reason||e.message||'Hata').slice(0,120));}
-  finally{btn.disabled=false;}
+    setSts('wd-sts', 'ok', 'Bakiye cekildi!');
+    await checkOwner();
+  } catch(e) {
+    setSts('wd-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 100));
+  }
 }
-async function sendGN(){
-  if(!reqW('gn-status'))return;
-  const msg=document.getElementById('gn-msg').value.trim();
-  const btn=document.getElementById('gn-btn');btn.disabled=true;
-  try{
-    setSt('gn-status','pending','İşlem imzalanıyor… (0.00001 ETH fee)');
-    const c=new ethers.Contract(CFG.GN_CONTRACT,GN_ABI,signer);
-    const tx=await c.gn(msg,{value:FEE});
-    setSt('gn-status','pending','Onay bekleniyor…<a class="tx-small" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shHash(tx.hash)+' ↗</a>');
+
+async function sendGM() {
+  if (!requireWlt('gm-sts')) return;
+  var msg = document.getElementById('gm-msg').value.trim();
+  var btn = document.getElementById('gm-btn');
+  btn.disabled = true;
+  try {
+    setSts('gm-sts', 'pnd', 'Imzalaniyor... (0.00001 ETH fee)');
+    var c  = new ethers.Contract(CFG.GM, GM_ABI, sgn);
+    var tx = await c.gm(msg, { value: GM_FEE });
+    setSts('gm-sts', 'pnd', 'Onay bekleniyor...<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">' + shH(tx.hash) + '</a>');
     await tx.wait();
-    setSt('gn-status','ok','🌙 GN başarıyla gönderildi!<a class="tx-small" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan\'da gör ↗</a>');
-    sGN++;document.getElementById('s-gn').textContent=sGN;addHist('gn',msg||'GN!',tx.hash);await loadStats();
-  }catch(e){setSt('gn-status','err','❌ '+(e.reason||e.message||'Hata').slice(0,120));}
-  finally{btn.disabled=false;}
+    setSts('gm-sts', 'ok', 'GM gonderildi!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">Basescan</a>');
+    cntGM++;
+    document.getElementById('s-gm').textContent = cntGM;
+    addHist('gm', msg || 'GM!', tx.hash);
+    await loadStats();
+  } catch(e) {
+    setSts('gm-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 120));
+  }
+  btn.disabled = false;
 }
-function reqW(sid){if(!account){setSt(sid,'err','⚠️ Önce cüzdanınızı bağlayın!');return false;}return true;}
-function setSt(id,type,html){const el=document.getElementById(id);el.className='status show '+type;el.innerHTML=(type==='pending'?'<div class="spin"></div>':'')+'<span>'+html+'</span>';}
-function clearSt(id){const el=document.getElementById(id);el.className='status';el.innerHTML='';}
-function switchTab(name,btn){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('pane-'+name).classList.add('active');}
-function shAddr(a){return a.slice(0,6)+'…'+a.slice(-4);}
-function shHash(h){return h.slice(0,10)+'…'+h.slice(-6);}
-function addHist(type,label,txHash){
-  const icons={gm:'☀️',gn:'🌙',deploy:'🚀'},cls={gm:'hi-gm',gn:'hi-gn',deploy:'hi-dp'},types={gm:'GM Gönderildi',gn:'GN Gönderildi',deploy:'Kontrat Deploy'};
-  const list=document.getElementById('history-list');
-  if(histCount===0)list.innerHTML='';histCount++;
-  const el=document.createElement('div');el.className='hist-item';
-  el.innerHTML='<div class="hist-icon '+cls[type]+'">'+icons[type]+'</div><div class="hist-info"><div class="hist-type">'+types[type]+'</div><div class="hist-sub">'+new Date().toLocaleTimeString('tr-TR')+' · '+label+'</div></div><a class="tx-link" href="'+CFG.EXPLORER+'/tx/'+txHash+'" target="_blank">'+shHash(txHash)+' ↗</a>';
-  list.insertBefore(el,list.firstChild);
+
+async function sendGN() {
+  if (!requireWlt('gn-sts')) return;
+  var msg = document.getElementById('gn-msg').value.trim();
+  var btn = document.getElementById('gn-btn');
+  btn.disabled = true;
+  try {
+    setSts('gn-sts', 'pnd', 'Imzalaniyor... (0.00001 ETH fee)');
+    var c  = new ethers.Contract(CFG.GN, GN_ABI, sgn);
+    var tx = await c.gn(msg, { value: GM_FEE });
+    setSts('gn-sts', 'pnd', 'Onay bekleniyor...<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">' + shH(tx.hash) + '</a>');
+    await tx.wait();
+    setSts('gn-sts', 'ok', 'GN gonderildi!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">Basescan</a>');
+    cntGN++;
+    document.getElementById('s-gn').textContent = cntGN;
+    addHist('gn', msg || 'GN!', tx.hash);
+    await loadStats();
+  } catch(e) {
+    setSts('gn-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 120));
+  }
+  btn.disabled = false;
 }
-window.addEventListener('load',()=>{setTimeout(()=>{scanLegacy();},500);});
+
+async function deployTemplate() {
+  if (!requireWlt('dep-sts')) return;
+  if (!selTplKey) { setSts('dep-sts', 'err', 'Once bir sablon secin!'); return; }
+  var name = document.getElementById('dep-name').value.trim() || TPLS[selTplKey].label;
+  var tpl  = TPLS[selTplKey];
+  var btn  = document.getElementById('dep-btn');
+  btn.disabled = true;
+  try {
+    setSts('dep-sts', 'pnd', 'Adim 1/2: Deploy fee gonderiliyor (0.0001 ETH)...');
+    var feeTx = await sgn.sendTransaction({ to: CFG.FEE_TO, value: DP_FEE });
+    setSts('dep-sts', 'pnd', 'Fee onaylaniyor...');
+    await feeTx.wait();
+    setSts('dep-sts', 'pnd', 'Adim 2/2: Kontrat deploy ediliyor...');
+    var factory  = new ethers.ContractFactory(tpl.abi, tpl.bytecode, sgn);
+    var contract = await factory.deploy();
+    var depTx    = contract.deploymentTransaction();
+    setSts('dep-sts', 'pnd', 'Onay bekleniyor...<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + depTx.hash + '">' + shH(depTx.hash) + '</a>');
+    await contract.waitForDeployment();
+    var addr = await contract.getAddress();
+    setSts('dep-sts', 'ok', 'Deploy basarili!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/address/' + addr + '">Basescan</a>');
+    document.getElementById('res-name').textContent = name;
+    document.getElementById('res-addr').textContent = addr;
+    var tl = document.getElementById('res-tx');
+    tl.textContent = shH(depTx.hash);
+    tl.href = CFG.EXPLORER + '/tx/' + depTx.hash;
+    document.getElementById('dep-result').style.display = 'block';
+    addHist('deploy', name, depTx.hash);
+  } catch(e) {
+    setSts('dep-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 160));
+  }
+  btn.disabled = false;
+}
+
+function requireWlt(sid) {
+  if (!acct) { setSts(sid, 'err', 'Once cuzdaninizi baglayin!'); return false; }
+  return true;
+}
+
+function setSts(id, type, html) {
+  var el = document.getElementById(id);
+  el.className = 'sts on ' + type;
+  el.innerHTML = (type === 'pnd' ? '<div class="spin"></div>' : '') + '<span>' + html + '</span>';
+}
+
+function clearSts(id) {
+  var el = document.getElementById(id);
+  el.className = 'sts';
+  el.innerHTML = '';
+}
+
+function shA(a) { return a.slice(0, 6) + '...' + a.slice(-4); }
+function shH(h) { return h.slice(0, 10) + '...' + h.slice(-6); }
+
+function addHist(type, label, txHash) {
+  var icons = { gm:'☀️', gn:'🌙', deploy:'🚀' };
+  var cls   = { gm:'hgm', gn:'hgn', deploy:'hdp' };
+  var types = { gm:'GM Gonderildi', gn:'GN Gonderildi', deploy:'Deploy' };
+  var lst   = document.getElementById('hist-list');
+  if (cntHist === 0) lst.innerHTML = '';
+  cntHist++;
+  var el = document.createElement('div');
+  el.className = 'hi';
+  el.innerHTML = '<div class="hico ' + cls[type] + '">' + icons[type] + '</div>'
+    + '<div class="hinfo"><div class="htype">' + types[type] + '</div>'
+    + '<div class="hsub">' + new Date().toLocaleTimeString('tr-TR') + ' - ' + label + '</div></div>'
+    + '<a class="txl" href="' + CFG.EXPLORER + '/tx/' + txHash + '" target="_blank">' + shH(txHash) + '</a>';
+  lst.insertBefore(el, lst.firstChild);
+}
+
+window.addEventListener('load', function() {
+  setTimeout(function() { scanLegacy(); }, 300);
+});
 </script>
 </body>
 </html>
