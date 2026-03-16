@@ -335,7 +335,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
   <button class="tab on" id="tab-gm" onclick="switchTab('gm')">☀️ GM</button>
   <button class="tab" id="tab-gn" onclick="switchTab('gn')">🌙 GN</button>
   <button class="tab" id="tab-dp" onclick="switchTab('deploy')">🚀 Deploy</button>
-  <button class="tab" id="tab-hs" onclick="switchTab('history')">📜 Gecmis</button>
+  
   <button class="tab" id="tab-gm2" onclick="switchTab('game')">🎲 Oyun</button>
 </div>
 
@@ -357,6 +357,17 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
     <div class="grow"><span>+ Gas</span><span class="gv">~0.0001 ETH</span></div>
     <button class="abtn abtn-gm" id="gm-btn" onclick="sendGM()">☀️ GM Gonder</button>
     <div class="sts" id="gm-sts"></div>
+  </div>
+
+  <div class="opnl" id="owner-pnl" style="display:none">
+    <div class="otitle">Owner Paneli</div>
+    <div class="irow"><span class="il">GM Bakiyesi</span><span class="iv" id="gm-bal">-</span></div>
+    <div class="irow" style="margin-bottom:12px"><span class="il">GN Bakiyesi</span><span class="iv" id="gn-bal">-</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="wbtn" onclick="doWithdraw('gm')">GM Cek</button>
+      <button class="wbtn" onclick="doWithdraw('gn')">GN Cek</button>
+    </div>
+    <div class="sts" id="wd-sts"></div>
   </div>
 </div>
 
@@ -414,38 +425,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); 
 </div>
 
 <!-- HISTORY -->
-<div class="pane" id="pane-history">
-  <div class="card">
-    <div class="ctitle">Islem Gecmisi</div>
-    <div id="hist-list"><p style="font-size:13px;color:var(--tx2);text-align:center;padding:16px 0">Henuz islem yok.</p></div>
-  </div>
-  <div class="opnl" id="owner-pnl" style="display:none">
-    <div class="otitle">Owner Paneli</div>
-    <div class="irow"><span class="il">GM Bakiyesi</span><span class="iv" id="gm-bal">-</span></div>
-    <div class="irow" style="margin-bottom:12px"><span class="il">GN Bakiyesi</span><span class="iv" id="gn-bal">-</span></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button class="wbtn" onclick="doWithdraw('gm')">GM Cek</button>
-      <button class="wbtn" onclick="doWithdraw('gn')">GN Cek</button>
-    </div>
-    <div class="sts" id="wd-sts"></div>
-  </div>
-  <div class="card">
-    <div class="ctitle">Oturum</div>
-    <div class="g2">
-      <div style="text-align:center;padding:12px 0">
-        <div style="font-size:28px;font-weight:700;font-family:'Space Mono',monospace;color:var(--gold)" id="s-gm">0</div>
-        <div style="font-size:12px;color:var(--tx2);margin-top:4px">GM</div>
-      </div>
-      <div style="text-align:center;padding:12px 0">
-        <div style="font-size:28px;font-weight:700;font-family:'Space Mono',monospace;color:var(--purple)" id="s-gn">0</div>
-        <div style="font-size:12px;color:var(--tx2);margin-top:4px">GN</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- GAME -->
 <div class="pane" id="pane-game">
 
   <!-- XP İstatistikler -->
@@ -574,20 +553,19 @@ function selTpl(key) {
 }
 
 function switchTab(name) {
-  var allTabs  = ['tab-gm','tab-gn','tab-dp','tab-hs','tab-gm2'];
-  var allPanes = ['pane-gm','pane-gn','pane-deploy','pane-history','pane-game'];
+  var allTabs  = ['tab-gm','tab-gn','tab-dp','tab-gm2'];
+  var allPanes = ['pane-gm','pane-gn','pane-deploy','pane-game'];
   for (var i = 0; i < allTabs.length; i++) {
     var te = document.getElementById(allTabs[i]);
     var pe = document.getElementById(allPanes[i]);
     if (te) te.classList.remove('on');
     if (pe) pe.classList.remove('on');
   }
-  var tabMap = {'gm':'tab-gm','gn':'tab-gn','deploy':'tab-dp','history':'tab-hs','game':'tab-gm2'};
+  var tabMap = {'gm':'tab-gm','gn':'tab-gn','deploy':'tab-dp','game':'tab-gm2'};
   var el = document.getElementById(tabMap[name]);
   var pe = document.getElementById('pane-' + name);
   if (el) el.classList.add('on');
   if (pe) pe.classList.add('on');
-  if (name === 'history') loadHistory();
 }
 
 function openModal() {
@@ -701,7 +679,6 @@ async function connectWith(rdns) {
     await loadStats();
     await checkOwner();
     await loadDiceStats();
-    await loadHistory();
   } catch(e) {
     clearSts('gm-sts');
     if (e.code !== 4001) setSts('gm-sts', 'err', 'Hata: ' + (e.message || 'bilinmiyor').slice(0, 80));
@@ -772,25 +749,33 @@ async function loadBal() {
 
 async function loadStats() {
   if (!acct) return;
-  try {
-    var ro  = new ethers.JsonRpcProvider(CFG.RPC);
-    var gmC = new ethers.Contract(CFG.GM, GM_ABI, ro);
-    var gnC = new ethers.Contract(CFG.GN, GN_ABI, ro);
-    var res = await Promise.all([
-      gmC.totalGMs(), gmC.streakOf(acct), gmC.hasSentGMToday(acct),
-      gnC.totalGNs(), gnC.streakOf(acct), gnC.hasSentGNToday(acct)
-    ]);
-    document.getElementById('gm-total').textContent  = res[0].toString();
-    document.getElementById('gm-streak').textContent = res[1].toString() + ' Gun';
-    document.getElementById('gn-total').textContent  = res[3].toString();
-    document.getElementById('gn-streak').textContent = res[4].toString() + ' Gun';
-    document.getElementById('gm-today').innerHTML = res[2]
-      ? '<span class="bdg bg">Gonderildi</span>'
-      : '<span class="bdg bb">Henuz yok</span>';
-    document.getElementById('gn-today').innerHTML = res[5]
-      ? '<span class="bdg bg">Gonderildi</span>'
-      : '<span class="bdg bp">Henuz yok</span>';
-  } catch(e) { console.warn('stats err:', e); }
+  var RPCS = [
+    'https://base.llamarpc.com',
+    'https://mainnet.base.org',
+    'https://base-rpc.publicnode.com'
+  ];
+  for (var ri = 0; ri < RPCS.length; ri++) {
+    try {
+      var ro  = new ethers.JsonRpcProvider(RPCS[ri]);
+      var gmC = new ethers.Contract(CFG.GM, GM_ABI, ro);
+      var gnC = new ethers.Contract(CFG.GN, GN_ABI, ro);
+      var res = await Promise.all([
+        gmC.totalGMs(), gmC.streakOf(acct), gmC.hasSentGMToday(acct),
+        gnC.totalGNs(), gnC.streakOf(acct), gnC.hasSentGNToday(acct)
+      ]);
+      document.getElementById('gm-total').textContent  = res[0].toString();
+      document.getElementById('gm-streak').textContent = res[1].toString() + ' Gun';
+      document.getElementById('gn-total').textContent  = res[3].toString();
+      document.getElementById('gn-streak').textContent = res[4].toString() + ' Gun';
+      document.getElementById('gm-today').innerHTML = res[2]
+        ? '<span class="bdg bg">Gonderildi</span>'
+        : '<span class="bdg bb">Henuz yok</span>';
+      document.getElementById('gn-today').innerHTML = res[5]
+        ? '<span class="bdg bg">Gonderildi</span>'
+        : '<span class="bdg bp">Henuz yok</span>';
+      return; // başarılı, dur
+    } catch(e) { console.warn('stats err RPC '+ri+':', e); }
+  }
 }
 
 async function checkOwner() {
@@ -837,7 +822,6 @@ async function sendGM() {
     setSts('gm-sts', 'ok', 'GM gonderildi!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">Basescan</a>');
     cntGM++;
     document.getElementById('s-gm').textContent = cntGM;
-    addHist('gm', msg || 'GM!', tx.hash);
     await loadStats();
   } catch(e) {
     setSts('gm-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 120));
@@ -859,7 +843,6 @@ async function sendGN() {
     setSts('gn-sts', 'ok', 'GN gonderildi!<a class="txs" target="_blank" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '">Basescan</a>');
     cntGN++;
     document.getElementById('s-gn').textContent = cntGN;
-    addHist('gn', msg || 'GN!', tx.hash);
     await loadStats();
   } catch(e) {
     setSts('gn-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 120));
@@ -893,7 +876,6 @@ async function deployTemplate() {
     tl.textContent = shH(depTx.hash);
     tl.href = CFG.EXPLORER + '/tx/' + depTx.hash;
     document.getElementById('dep-result').style.display = 'block';
-    addHist('deploy', name, depTx.hash);
   } catch(e) {
     setSts('dep-sts', 'err', 'Hata: ' + (e.reason || e.message || '').slice(0, 160));
   }
@@ -919,242 +901,6 @@ function clearSts(id) {
 
 function shA(a) { return a.slice(0, 6) + '...' + a.slice(-4); }
 function shH(h) { return h.slice(0, 10) + '...' + h.slice(-6); }
-
-async function loadHistory() {
-  if (!acct) return;
-  var lst = document.getElementById('hist-list');
-  lst.innerHTML = '<p style="font-size:13px;color:var(--tx2);text-align:center;padding:16px 0">Yukleniyor...</p>';
-
-  try {
-    // Basescan API ile son 50 işlemi çek
-    var url = 'https://api.etherscan.io/v2/api?chainid=8453&module=account&action=txlist&address=' + acct
-      + '&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=6PAW3CPS38MMDFR4Z6HMZD48K4QWR4JWIS';
-    var res = await fetch(url);
-    var data = await res.json();
-    console.log('API yaniti:', data.status, data.message, Array.isArray(data.result));
-
-    if (!data.result || !Array.isArray(data.result) || data.result.length === 0) {
-      lst.innerHTML = '<p style="font-size:13px;color:var(--tx2);text-align:center;padding:16px 0">Henuz islem yok.</p>';
-      return;
-    }
-
-    // Sadece GM, GN ve Dice kontratlarına yapılan işlemleri filtrele
-    var relevant = data.result.filter(function(tx) {
-      var to = (tx.to || '').toLowerCase();
-      return to === CFG.GM.toLowerCase()
-          || to === CFG.GN.toLowerCase()
-          || to === DICE_CONTRACT.toLowerCase();
-    });
-
-    if (relevant.length === 0) {
-      lst.innerHTML = '<p style="font-size:13px;color:var(--tx2);text-align:center;padding:16px 0">Henuz islem yok.</p>';
-      return;
-    }
-
-    lst.innerHTML = '';
-    relevant.forEach(function(tx) {
-      var to   = (tx.to || '').toLowerCase();
-      var type, icon, cls, label;
-      var date = new Date(parseInt(tx.timeStamp) * 1000);
-      var timeStr = date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR');
-
-      if (to === CFG.GM.toLowerCase()) {
-        type='GM'; icon='☀️'; cls='hgm'; label='GM Gonderildi';
-      } else if (to === CFG.GN.toLowerCase()) {
-        type='GN'; icon='🌙'; cls='hgn'; label='GN Gonderildi';
-      } else {
-        type='Dice'; icon='🎲'; cls='hdp'; label='Zar Atildi';
-      }
-
-      var el = document.createElement('div');
-      el.className = 'hi';
-      el.innerHTML = '<div class="hico ' + cls + '">' + icon + '</div>'
-        + '<div class="hinfo"><div class="htype">' + label + '</div>'
-        + '<div class="hsub">' + timeStr + '</div></div>'
-        + '<a class="txl" href="' + CFG.EXPLORER + '/tx/' + tx.hash + '" target="_blank">' + tx.hash.slice(0,8)+'...'+tx.hash.slice(-6) + '</a>';
-      lst.appendChild(el);
-    });
-
-  } catch(e) {
-    lst.innerHTML = '<p style="font-size:13px;color:var(--tx2);text-align:center;padding:16px 0">Gecmis yuklenemedi.</p>';
-    console.warn('history err:', e);
-  }
-}
-
-function addHist(type, label, txHash) {
-  var icons = { gm:'☀️', gn:'🌙', deploy:'🚀' };
-  var cls   = { gm:'hgm', gn:'hgn', deploy:'hdp' };
-  var types = { gm:'GM Gonderildi', gn:'GN Gonderildi', deploy:'Deploy' };
-  var lst   = document.getElementById('hist-list');
-  if (cntHist === 0) lst.innerHTML = '';
-  cntHist++;
-  var el = document.createElement('div');
-  el.className = 'hi';
-  el.innerHTML = '<div class="hico ' + cls[type] + '">' + icons[type] + '</div>'
-    + '<div class="hinfo"><div class="htype">' + types[type] + '</div>'
-    + '<div class="hsub">' + new Date().toLocaleTimeString('tr-TR') + ' - ' + label + '</div></div>'
-    + '<a class="txl" href="' + CFG.EXPLORER + '/tx/' + txHash + '" target="_blank">' + shH(txHash) + '</a>';
-  lst.insertBefore(el, lst.firstChild);
-}
-
-
-// ══════════════════════════════════════════════
-// DICE XP SISTEMI
-// ══════════════════════════════════════════════
-// TODO: DiceXP kontratini deploy edip bu adresi guncelleyin
-var DICE_CONTRACT = '0xB1c153F5b8eB0AB275c4ed721606D814750EFea9';
-var DICE_FEE = ethers.parseEther('0.00005');
-
-var DICE_ABI = [
-  'function rollDice() external payable',
-  'function getPlayerStats(address) view returns (uint256 xp, uint256 rolls, uint256 doubles, uint256 level)',
-  'function xpOf(address) view returns (uint256)',
-  'function rollCountOf(address) view returns (uint256)',
-  'function doubleCountOf(address) view returns (uint256)',
-  'function contractBalance() view returns (uint256)',
-  'function withdraw() external',
-  'function owner() view returns (address)',
-  'event DiceRolled(address indexed player, uint8 dice1, uint8 dice2, bool isDouble, uint256 xpEarned, uint256 totalXP)'
-];
-
-
-// ── Basit SVG Zar Sistemi ─────────────────────────────────────────────
-var PP={
-  1:[[40,40]],
-  2:[[22,22],[58,58]],
-  3:[[22,22],[40,40],[58,58]],
-  4:[[22,22],[58,22],[22,58],[58,58]],
-  5:[[22,22],[58,22],[40,40],[22,58],[58,58]],
-  6:[[22,18],[58,18],[22,40],[58,40],[22,62],[58,62]]
-};
-
-function makeDiceSVG(val, hl){
-  var color  = hl ? '#7c3aed' : '#1e293b';
-  var bg     = hl ? '#ede9fe' : '#ffffff';
-  var border = hl ? '#7c3aed' : '#cbd5e1';
-  var shadow = hl ? 'filter:drop-shadow(0 0 10px #7c3aed);' : 'filter:drop-shadow(2px 3px 6px rgba(0,0,0,.4));';
-  var dots   = (PP[val]||[]).map(function(p){
-    return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" fill="'+color+'"/>';
-  }).join('');
-  return '<svg viewBox="0 0 80 80" width="80" height="80" style="'+shadow+'">'
-    +'<rect x="3" y="3" width="74" height="74" rx="14" fill="'+bg+'" stroke="'+border+'" stroke-width="2.5"/>'
-    +dots+'</svg>';
-}
-
-function setDice(n, val, hl){
-  var el = document.getElementById('d'+n);
-  if(el) el.innerHTML = makeDiceSVG(val, hl);
-}
-
-function initDiceSVG(){
-  setDice(1, 1, false);
-  setDice(2, 1, false);
-}
-
-// Sallama animasyonu (CSS keyframe ile)
-var shakeStyle = document.createElement('style');
-shakeStyle.textContent = '@keyframes diceShake{0%,100%{transform:rotate(0deg) scale(1)}15%{transform:rotate(-15deg) scale(1.1)}30%{transform:rotate(12deg) scale(1.05)}45%{transform:rotate(-10deg) scale(1.08)}60%{transform:rotate(8deg) scale(1.05)}75%{transform:rotate(-5deg) scale(1.02)}90%{transform:rotate(3deg) scale(1)}}';
-document.head.appendChild(shakeStyle);
-
-function getLevel(xp){
-  if(xp>=50000)return{name:'👑 Elmas',color:'#06b6d4'};
-  if(xp>=10000)return{name:'💎 Platin',color:'#8b5cf6'};
-  if(xp>=5000) return{name:'🥇 Altin', color:'#f59e0b'};
-  if(xp>=1000) return{name:'🥈 Gumus',color:'#94a3b8'};
-  return{name:'🥉 Bronz',color:'#b45309'};
-}
-
-async function loadDiceStats(){
-  if(!acct)return;
-  document.getElementById('dice-addr').textContent=DICE_CONTRACT.slice(0,6)+'...'+DICE_CONTRACT.slice(-4);
-  try{
-    var ro=new ethers.JsonRpcProvider(CFG.RPC);
-    var dc=new ethers.Contract(DICE_CONTRACT,DICE_ABI,ro);
-    var stats=await dc.getPlayerStats(acct);
-    var xp=Number(stats[0]),rolls=Number(stats[1]),doubles=Number(stats[2]);
-    var lvl=getLevel(xp);
-    document.getElementById('xp-total').textContent=xp.toLocaleString();
-    document.getElementById('xp-total').style.color=lvl.color;
-    document.getElementById('xp-level').textContent=lvl.name;
-    document.getElementById('xp-level').style.color=lvl.color;
-    document.getElementById('dice-rolls').textContent=rolls;
-    document.getElementById('dice-doubles').textContent=doubles;
-    var xpDisp=document.getElementById('gm-xp-display');
-    var lvlDisp=document.getElementById('gm-lvl-display');
-    if(xpDisp)xpDisp.textContent=xp.toLocaleString()+' XP';
-    if(lvlDisp){lvlDisp.textContent=lvl.name;lvlDisp.style.color=lvl.color;}
-  }catch(e){console.warn('dice stats:',e);}
-}
-
-async function rollDice(){
-  if(!requireWlt('roll-sts'))return;
-  var btn=document.getElementById('roll-btn');
-  btn.disabled=true;
-  document.getElementById('dice-result').textContent='';
-
-  // Sallama animasyonu başlat
-  var d1=document.getElementById('d1'), d2=document.getElementById('d2');
-  var animInterval=setInterval(function(){
-    setDice(1,Math.ceil(Math.random()*6),false);
-    setDice(2,Math.ceil(Math.random()*6),false);
-    d1.style.animation='none'; d1.offsetHeight;
-    d1.style.animation='diceShake '+(0.3+Math.random()*0.2)+'s ease-in-out';
-    d2.style.animation='none'; d2.offsetHeight;
-    d2.style.animation='diceShake '+(0.3+Math.random()*0.2)+'s ease-in-out';
-  },300);
-
-  try{
-    setSts('roll-sts','pnd','Imzalaniyor... (0.00005 ETH)');
-    var c=new ethers.Contract(DICE_CONTRACT,DICE_ABI,sgn);
-    var tx=await c.rollDice({value:DICE_FEE});
-    setSts('roll-sts','pnd','Onaylanıyor...<a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shH(tx.hash)+'</a>');
-
-    var receipt=await tx.wait();
-
-    // Event'ten zar değerlerini oku
-    var iface=new ethers.Interface(DICE_ABI);
-    var dice1=1,dice2=1,isDouble=false,xpEarned=2;
-    for(var i=0;i<receipt.logs.length;i++){
-      try{
-        var parsed=iface.parseLog(receipt.logs[i]);
-        if(parsed&&parsed.name==='DiceRolled'){
-          dice1=Number(parsed.args[1]);
-          dice2=Number(parsed.args[2]);
-          isDouble=Boolean(parsed.args[3]);
-          xpEarned=isDouble?50:(dice1+dice2);
-          break;
-        }
-      }catch(e2){}
-    }
-
-    // Animasyonu durdur, sonucu göster
-    clearInterval(animInterval);
-    d1.style.animation='none';
-    d2.style.animation='none';
-    setDice(1,dice1,isDouble);
-    setDice(2,dice2,isDouble);
-
-    var resEl=document.getElementById('dice-result');
-    if(isDouble){
-      resEl.style.color='#7c3aed';
-      resEl.textContent='🎊 ÇİFT! '+dice1+' + '+dice2+' = '+(dice1+dice2)+'  →  +50 XP!';
-      setSts('roll-sts','ok','🎊 Cift! +50 XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
-    }else{
-      resEl.style.color='';
-      resEl.textContent=dice1+' + '+dice2+' = '+(dice1+dice2)+'  →  +'+xpEarned+' XP';
-      setSts('roll-sts','ok','+'+xpEarned+' XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
-    }
-    addHist('dice','Zar: '+dice1+'+'+dice2+(isDouble?' CIFT!':''),tx.hash);
-    await loadDiceStats();
-  }catch(e){
-    clearInterval(animInterval);
-    d1.style.animation='none';
-    d2.style.animation='none';
-    setSts('roll-sts','err','Hata: '+(e.reason||e.message||'').slice(0,120));
-  }
-  btn.disabled=false;
-}
-
 
 window.addEventListener('load', function() {
   setTimeout(function() { scanLegacy(); }, 300);
