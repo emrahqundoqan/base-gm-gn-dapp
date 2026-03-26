@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="talentapp:project_verification" content="9ff456b07b51ebe380e8353a57b67874a40154f96c73c1fb40349ae7dc0ec398a9fccd1eb1c70b49b32225da4afb77e055bdcda23fe607ff7daeaa940b132c9f">
-<title>Base Fun</title>
+<title>Base Fun dApp</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
@@ -183,6 +183,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
   <button class="tab" id="tab-gn" onclick="switchTab('gn')">🌙 GN</button>
   <button class="tab" id="tab-dp" onclick="switchTab('deploy')">🚀 Deploy</button>
   <button class="tab" id="tab-game" onclick="switchTab('game')">🎲 Oyun</button>
+  <button class="tab" id="tab-wheel" onclick="switchTab('wheel')">🎡 Cark</button>
 </div>
 
 <!-- GM -->
@@ -256,6 +257,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
     <div class="irow"><span class="il">Tx</span><a class="txs" id="res-tx" target="_blank">-</a></div>
   </div>
 </div>
+
+<!-- ÇARK -->
+<div class="pane" id="pane-wheel">
+  <div class="g2" style="margin-bottom:16px">
+    <div class="sc"><div class="sn" style="color:var(--gold);font-size:28px" id="wheel-xp-total">0</div><div class="sl">Toplam XP</div></div>
+    <div class="sc"><div class="sn" style="font-size:16px;padding-top:8px" id="wheel-xp-level">🥉 Bronz</div><div class="sl">Seviye</div></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Sansli Cark</div>
+    <div style="position:relative;display:flex;justify-content:center;align-items:center;margin:8px 0 16px">
+      <!-- Ok işareti -->
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);z-index:10;font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">▼</div>
+      <canvas id="wheel-canvas" width="300" height="300" style="border-radius:50%;box-shadow:0 4px 20px rgba(0,0,0,.3);cursor:pointer"></canvas>
+    </div>
+    <div id="wheel-result" style="text-align:center;min-height:36px;margin-bottom:14px;font-size:17px;font-weight:700"></div>
+    <div class="fbox fbox-dp"><span class="fl-dp">Cark Ucreti</span><span class="fv-dp">0.00005 ETH</span></div>
+    <button class="abtn abtn-dp" id="wheel-btn" onclick="spinWheel()">🎡 Carki Cevir!</button>
+    <div class="sts" id="wheel-sts"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Cark Oduller</div>
+    <div class="irow"><span class="il">🔥 Jackpot</span><span class="iv" style="color:#f59e0b;font-weight:700">+500 XP</span></div>
+    <div class="irow"><span class="il">⭐ Harika</span><span class="iv" style="color:#7c3aed">+200 XP</span></div>
+    <div class="irow"><span class="il">✨ Super</span><span class="iv">+100 XP</span></div>
+    <div class="irow"><span class="il">🎯 İyi</span><span class="iv">+50 XP</span></div>
+    <div class="irow"><span class="il">👍 Normal</span><span class="iv">+25 XP</span></div>
+    <div class="irow"><span class="il">🎲 Deneme</span><span class="iv">+10 XP</span></div>
+  </div>
+</div>
+
 
 <!-- OYUN -->
 <div class="pane" id="pane-game">
@@ -359,15 +390,12 @@ function selTpl(key){
   document.getElementById('sel-tpl').textContent=TPLS[key].label;
 }
 function switchTab(name){
-  ['gm','gn','deploy','game'].forEach(function(t){
-    var tab=document.getElementById('tab-'+t);
-    var pane=document.getElementById('pane-'+(t==='game'?'game':t));
-    if(tab) tab.classList.remove('on');
-    if(pane) pane.classList.remove('on');
-  });
-  // deploy tabı özel
-  var tabId = name==='deploy'?'tab-dp':name==='game'?'tab-game':'tab-'+name;
-  var t2=document.getElementById(tabId);
+  var tabIds  = ['tab-gm','tab-gn','tab-dp','tab-game','tab-wheel'];
+  var paneIds = ['pane-gm','pane-gn','pane-deploy','pane-game','pane-wheel'];
+  tabIds.forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');});
+  paneIds.forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');});
+  var tabMap={'gm':'tab-gm','gn':'tab-gn','deploy':'tab-dp','game':'tab-game','wheel':'tab-wheel'};
+  var t2=document.getElementById(tabMap[name]);
   var p2=document.getElementById('pane-'+name);
   if(t2) t2.classList.add('on');
   if(p2) p2.classList.add('on');
@@ -635,6 +663,11 @@ async function loadDiceStats(){
     if(xl){xl.textContent=lvl.name;xl.style.color=lvl.color;}
     if(dr)dr.textContent=rolls;
     if(dd)dd.textContent=doubles;
+    // Cark XP de guncelle
+    var wxt=document.getElementById('wheel-xp-total');
+    var wxl=document.getElementById('wheel-xp-level');
+    if(wxt){wxt.textContent=xp.toLocaleString();wxt.style.color=lvl.color;}
+    if(wxl){wxl.textContent=lvl.name;wxl.style.color=lvl.color;}
   }catch(e){console.warn('dice stats err',e);}
 }
 async function rollDice(){
@@ -700,6 +733,182 @@ function setSts(id,type,html){var el=document.getElementById(id);if(!el)return;e
 function clearSts(id){var el=document.getElementById(id);if(!el)return;el.className='sts';el.innerHTML='';}
 function shA(a){return a.slice(0,6)+'...'+a.slice(-4);}
 function shH(h){return h.slice(0,10)+'...'+h.slice(-6);}
+
+// ── ÇARK OYUNU ─────────────────────────────────────────────────────
+var WHEEL_SEGMENTS = [
+  {label:'10 XP',  xp:10,  color:'#6366f1'},
+  {label:'25 XP',  xp:25,  color:'#0ea5e9'},
+  {label:'50 XP',  xp:50,  color:'#10b981'},
+  {label:'25 XP',  xp:25,  color:'#f59e0b'},
+  {label:'100 XP', xp:100, color:'#ef4444'},
+  {label:'10 XP',  xp:10,  color:'#8b5cf6'},
+  {label:'50 XP',  xp:50,  color:'#06b6d4'},
+  {label:'200 XP', xp:200, color:'#f97316'},
+  {label:'25 XP',  xp:25,  color:'#6366f1'},
+  {label:'10 XP',  xp:10,  color:'#0ea5e9'},
+  {label:'50 XP',  xp:50,  color:'#10b981'},
+  {label:'500 XP', xp:500, color:'#f59e0b'},
+  {label:'25 XP',  xp:25,  color:'#ef4444'},
+  {label:'100 XP', xp:100, color:'#8b5cf6'},
+  {label:'10 XP',  xp:10,  color:'#06b6d4'},
+  {label:'50 XP',  xp:50,  color:'#f97316'}
+];
+var N = WHEEL_SEGMENTS.length;
+var ANGLE = 2 * Math.PI / N;
+var wheelAngle = 0;
+var wheelSpinning = false;
+
+function drawWheel(angle) {
+  var cv = document.getElementById('wheel-canvas');
+  if (!cv) return;
+  var ctx = cv.getContext('2d');
+  var W = cv.width, H = cv.height;
+  var cx = W/2, cy = H/2, r = W/2 - 4;
+  ctx.clearRect(0, 0, W, H);
+
+  for (var i = 0; i < N; i++) {
+    var start = angle + i * ANGLE;
+    var end   = start + ANGLE;
+    var seg   = WHEEL_SEGMENTS[i];
+
+    // Dilim
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Yazı
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + ANGLE/2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px DM Sans, sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(seg.label, r - 8, 4);
+    ctx.restore();
+  }
+
+  // Merkez daire
+  ctx.beginPath();
+  ctx.arc(cx, cy, 22, 0, 2*Math.PI);
+  ctx.fillStyle = '#1e293b';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Merkez emoji
+  ctx.font = '16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎡', cx, cy);
+}
+
+function getWinningSegment(finalAngle) {
+  // Ok yukarıda (angle=-PI/2), hangi dilim oraya geliyor?
+  var normalized = ((- finalAngle - Math.PI/2) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+  var idx = Math.floor(normalized / ANGLE) % N;
+  return WHEEL_SEGMENTS[idx];
+}
+
+async function spinWheel() {
+  if (!requireWlt('wheel-sts')) return;
+  if (wheelSpinning) return;
+  wheelSpinning = true;
+
+  var btn = document.getElementById('wheel-btn');
+  btn.disabled = true;
+  document.getElementById('wheel-result').textContent = '';
+
+  try {
+    setSts('wheel-sts', 'pnd', 'Imzalaniyor... (0.00005 ETH)');
+
+    // Blockchain'den sonuç al (DiceXP kontratı rollDice kullan — aynı kontrat)
+    var c  = new ethers.Contract(DICE_CONTRACT, DICE_ABI, sgn);
+    var tx = await c.rollDice({ value: DICE_FEE });
+    setSts('wheel-sts', 'pnd', 'Onaylanıyor...<a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">'+shH(tx.hash)+'</a>');
+
+    var receipt = await tx.wait();
+
+    // Tx hash'ten rastgele segment seç (deterministik ama kullanıcı manipüle edemez)
+    var hashNum = parseInt(receipt.hash.slice(2, 10), 16);
+    var winIdx  = hashNum % N;
+    var winner  = WHEEL_SEGMENTS[winIdx];
+
+    // Hedef açı — winner segmenti okun altına getir
+    var targetSegAngle = -winIdx * ANGLE - ANGLE/2 - Math.PI/2;
+    var extraSpins = (5 + Math.floor(Math.random() * 4)) * 2 * Math.PI;
+    var finalAngle = wheelAngle + extraSpins + (targetSegAngle - ((wheelAngle) % (2*Math.PI)));
+
+    // Animasyon
+    var startAngle = wheelAngle;
+    var duration   = 4000;
+    var startTime  = null;
+
+    function easeOut(t) {
+      return 1 - Math.pow(1 - t, 4);
+    }
+
+    function animate(ts) {
+      if (!startTime) startTime = ts;
+      var elapsed  = ts - startTime;
+      var progress = Math.min(elapsed / duration, 1);
+      var eased    = easeOut(progress);
+      wheelAngle   = startAngle + (finalAngle - startAngle) * eased;
+      drawWheel(wheelAngle);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        wheelAngle = finalAngle;
+        drawWheel(wheelAngle);
+
+        // Sonuç
+        var resEl = document.getElementById('wheel-result');
+        var color = winner.xp >= 500 ? '#f59e0b' : winner.xp >= 200 ? '#7c3aed' : winner.xp >= 100 ? '#10b981' : '#0052FF';
+        resEl.style.color = color;
+        resEl.textContent = '🎉 Tebrikler! +' + winner.xp + ' XP kazandın!';
+        setSts('wheel-sts', 'ok', '+'+winner.xp+' XP! <a class="txs" target="_blank" href="'+CFG.EXPLORER+'/tx/'+tx.hash+'">Basescan</a>');
+
+        // XP göster (local — blockchain'de zar puanı kaydedildi)
+        var xt = document.getElementById('wheel-xp-total');
+        var xl = document.getElementById('wheel-xp-level');
+        if (xt) {
+          var cur = parseInt(xt.textContent.replace(/,/g,''))||0;
+          var newXP = cur + winner.xp;
+          var lvl = getLevel(newXP);
+          xt.textContent = newXP.toLocaleString();
+          xt.style.color = lvl.color;
+          if (xl) { xl.textContent = lvl.name; xl.style.color = lvl.color; }
+        }
+
+        wheelSpinning = false;
+        btn.disabled = false;
+      }
+    }
+    requestAnimationFrame(animate);
+
+  } catch(e) {
+    setSts('wheel-sts', 'err', 'Hata: ' + (e.reason||e.message||'').slice(0,120));
+    wheelSpinning = false;
+    btn.disabled = false;
+  }
+}
+
+// Çark başlat
+setTimeout(function() {
+  drawWheel(0);
+  // XP'yi yükle
+  if (acct) loadDiceStats();
+}, 300);
+
 
 window.addEventListener('load',function(){
   setTimeout(function(){scanLegacy();},300);
