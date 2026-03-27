@@ -62,14 +62,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 <div class="wrap">
 <div class="hdr">
   <div class="logo"><svg viewBox="0 0 32 32" fill="none" width="24" height="24"><circle cx="16" cy="16" r="14" fill="#0052FF"/><path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12c5.435 0 10.035-3.6 11.5-8.571H16v-2.857h12.857a12 12 0 000-1.143H16v-2.857h11.5C26.035 7.6 21.435 4 16 4z" fill="white"/></svg></div>
-  <div class="hdr-txt"><h1>Base Fun dApp</h1><p>Check-in & Game Hub</p></div>
-  <div class="net-pill"><div class="dot" id="net-dot"></div><span id="net-name">Cüzdan Bekleniyor</span></div>
+  <div class="hdr-txt"><h1>Base Fun dApp</h1><p>Check-in & Ecosystem</p></div>
+  <div class="net-pill"><div class="dot" id="net-dot"></div><span id="net-name">Bekleniyor...</span></div>
 </div>
 
-<div class="nwrn" id="net-warn">Lütfen Base Mainnet'e geçiş yapın.<button onclick="switchToBase()">Ağı Değiştir</button></div>
+<div class="nwrn" id="net-warn">Lütfen Base Mainnet'e geçin.<button onclick="switchToBase()">Ağı Değiştir</button></div>
 
 <div class="wlt-card">
-  <div class="wlt-info"><div class="lbl" id="wlt-lbl">Cüzdan</div><div class="adr" id="wlt-adr">Bağlı değil</div></div>
+  <div class="wlt-info"><div class="lbl">Cüzdan</div><div class="adr" id="wlt-adr">Bağlı değil</div></div>
   <button class="btn-con" id="con-btn" onclick="handleWalletAction()">Bağlan</button>
 </div>
 
@@ -83,11 +83,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 <div class="pane on" id="pane-checkin">
   <div class="g2" style="margin-bottom:16px">
     <div class="sc"><div class="sn" style="color:var(--blue)" id="ck-streak">0</div><div class="sl">Günlük Seri</div></div>
-    <div class="sc"><div class="sn" style="color:var(--green)" id="ck-total">0</div><div class="sl">Toplam</div></div>
+    <div class="sc"><div class="sn" style="color:var(--green)" id="ck-total">0</div><div class="sl">Toplam XP</div></div>
   </div>
   <div class="card">
-    <div class="ctitle">Günlük Takvim</div>
-    <div class="irow"><span class="il">Sıfırlanma</span><span class="iv">Her gün 03:00</span></div>
+    <div class="ctitle">Profil & XP Bilgisi</div>
+    <div class="irow"><span class="il">Seviye</span><span id="xp-level-global" class="iv">🥉 Bronz</span></div>
+    <div class="irow"><span class="il">Sıfırlanma</span><span class="iv">03:00 (TR)</span></div>
     <div class="irow"><span class="il">Durum</span><span id="ck-status" class="iv">Cüzdan bekleniyor</span></div>
     <button class="abtn abtn-dp" id="ck-btn" style="margin-top:15px" onclick="doCheckIn()">📅 Check-in Yap</button>
     <div class="sts" id="ck-sts"></div>
@@ -95,22 +96,47 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 </div>
 
 <div class="pane" id="pane-gm">
-  <div class="card"><div class="ctitle">☀️ GM Gönder</div><button class="abtn abtn-dp" style="background:var(--gold); color:#000" onclick="sendMsg('gm')">☀️ GM Gönder</button><div class="sts" id="gm-sts"></div></div>
-  <div class="card"><div class="ctitle">🌙 GN Gönder</div><button class="abtn abtn-dp" style="background:var(--purple); color:#fff" onclick="sendMsg('gn')">🌙 GN Gönder</button><div class="sts" id="gn-sts"></div></div>
+  <div class="card">
+    <div class="ctitle">☀️ Güne Başla</div>
+    <button class="abtn abtn-dp" style="background:var(--gold); color:#000" onclick="sendMsg('gm')">☀️ GM Gönder</button>
+    <div class="sts" id="gm-sts"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">🌙 Günü Bitir</div>
+    <button class="abtn abtn-dp" style="background:var(--purple); color:#fff" onclick="sendMsg('gn')">🌙 GN Gönder</button>
+    <div class="sts" id="gn-sts"></div>
+  </div>
 </div>
 
 <div class="pane" id="pane-game">
-  <div class="g2" style="margin-bottom:16px"><div class="sc"><div class="sn" style="color:var(--gold)" id="xp-total">0</div><div class="sl">Toplam XP</div></div><div class="sc"><div class="sn" id="xp-level">🥉 Bronz</div><div class="sl">Seviye</div></div></div>
-  <div class="card"><div class="ctitle">Zar At</div><div class="dice-masa"><div class="dice-box" id="d1-box"><svg id="d1-svg" width="60" height="60"></svg></div><div class="dice-box" id="d2-box"><svg id="d2-svg" width="60" height="60"></svg></div></div><div id="dice-res" style="text-align:center; font-weight:700; margin-bottom:10px"></div><button class="abtn abtn-dp" onclick="rollDice()">🎲 Zar At!</button><div class="sts" id="roll-sts"></div></div>
+  <div class="card">
+    <div class="ctitle">Zar At</div>
+    <div class="dice-masa">
+      <div class="dice-box" id="d1-box"><svg id="d1-svg" width="60" height="60"></svg></div>
+      <div class="dice-box" id="d2-box"><svg id="d2-svg" width="60" height="60"></svg></div>
+    </div>
+    <div id="dice-res" style="text-align:center; font-weight:700; margin-bottom:10px"></div>
+    <button class="abtn abtn-dp" onclick="rollDice()">🎲 Zar At!</button>
+    <div class="sts" id="roll-sts"></div>
+  </div>
 </div>
 
 <div class="pane" id="pane-wheel">
-  <div class="card" style="text-align:center"><div class="ctitle">Şanslı Çark</div><div style="position:relative; display:inline-block; margin-bottom:15px"><div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); z-index:10; font-size:24px">▼</div><canvas id="wheel-cv" width="300" height="300"></canvas></div><div id="wheel-res" style="font-weight:700; margin-bottom:10px"></div><button class="abtn abtn-dp" id="spin-btn" onclick="spinWheel()">🎡 Çarkı Çevir!</button><div class="sts" id="wheel-sts"></div></div>
+  <div class="card" style="text-align:center">
+    <div class="ctitle">Şanslı Çark</div>
+    <div style="position:relative; display:inline-block; margin-bottom:15px">
+      <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); z-index:10; font-size:24px">▼</div>
+      <canvas id="wheel-cv" width="300" height="300"></canvas>
+    </div>
+    <div id="wheel-res" style="font-weight:700; margin-bottom:10px"></div>
+    <button class="abtn abtn-dp" id="spin-btn" onclick="spinWheel()">🎡 Çarkı Çevir!</button>
+    <div class="sts" id="wheel-sts"></div>
+  </div>
 </div>
 
 <div class="mbg" id="modal-bg">
   <div class="mdl">
-    <h2 style="margin-bottom:15px">Cüzdan Seçin</h2>
+    <h2>Cüzdan Seçin</h2>
     <div id="wlt-list">Cüzdan aranıyor...</div>
     <button class="mdl-cls" onclick="closeModal()">Kapat</button>
   </div>
@@ -132,7 +158,7 @@ const ADDR = {
 const ABIS = {
   CK: ["function checkIn() payable", "function userStreaks(address) view returns (uint256)", "function totalUserCheckIns(address) view returns (uint256)", "function lastCheckIn(address) view returns (uint256)"],
   MSG: ["function gm(string) payable", "function gn(string) payable"],
-  WHEEL: ["function spin() payable", "function getPlayerStats(address) view returns (uint256,uint256,uint256,uint256)", "event WheelSpun(address indexed player, uint8 segment, uint256 xpEarned, uint256 totalXP)"],
+  WHEEL: ["function spin() payable", "function getPlayerStats(address) view returns (uint256,uint256,uint256,uint256)"],
   DICE: ["function rollDice() payable", "function getPlayerStats(address) view returns (uint256,uint256,uint256,uint256)", "event DiceRolled(address indexed player, uint8 d1, uint8 d2, bool isD, uint256 xp, uint256 txp)"]
 };
 
@@ -140,52 +166,34 @@ let acct, prov, sgn, rawProv, wheelAngle = 0;
 let wlts = {};
 
 // --- WALLET ENGINE ---
+window.addEventListener("eip6963:announceProvider", (e) => { wlts[e.detail.info.rdns] = e.detail; renderWallets(); });
+window.dispatchEvent(new Event("eip6963:requestProvider"));
+
 function renderWallets() {
-  const list = document.getElementById('wlt-list');
-  list.innerHTML = "";
-  
-  // EIP-6963 Cüzdanları
+  const list = document.getElementById('wlt-list'); list.innerHTML = "";
   Object.values(wlts).forEach(w => {
-    const el = document.createElement('div');
-    el.className = 'wopt';
+    const el = document.createElement('div'); el.className = 'wopt';
     el.innerHTML = `<div class="wico"><img src="${w.info.icon}"></div><div><div class="wnm">${w.info.name}</div></div>`;
     el.onclick = () => connectWith(w.provider, w.info.rdns);
     list.appendChild(el);
   });
-
-  // Legacy (MetaMask vb. genel pencere) Fallback
   if (window.ethereum && Object.keys(wlts).length === 0) {
-    const el = document.createElement('div');
-    el.className = 'wopt';
-    el.innerHTML = `<div class="wico"><span>🦊</span></div><div><div class="wnm">Tarayıcı Cüzdanı</div></div>`;
+    const el = document.createElement('div'); el.className = 'wopt';
+    el.innerHTML = `<div class="wico"><span>🦊</span></div><div><div class="wnm">Browser Cüzdan</div></div>`;
     el.onclick = () => connectWith(window.ethereum, "browser");
     list.appendChild(el);
   }
 }
 
-window.addEventListener("eip6963:announceProvider", (e) => {
-  wlts[e.detail.info.rdns] = e.detail;
-  renderWallets();
-});
-window.dispatchEvent(new Event("eip6963:requestProvider"));
-
-async function handleWalletAction() {
-  if (acct) disconnect(); else { renderWallets(); openModal(); }
-}
+async function handleWalletAction() { if (acct) disconnect(); else openModal(); }
 
 async function connectWith(provider, rdns) {
   try {
     rawProv = provider;
     const accounts = await rawProv.request({ method: 'eth_requestAccounts' });
-    acct = accounts[0];
-    prov = new ethers.BrowserProvider(rawProv);
-    sgn = await prov.getSigner();
-    
+    acct = accounts[0]; prov = new ethers.BrowserProvider(rawProv); sgn = await prov.getSigner();
     localStorage.setItem('lastWallet', rdns);
-    updateUIConnected();
-    closeModal();
-    checkNetwork();
-
+    updateUIConnected(); closeModal(); checkNetwork();
     rawProv.on('chainChanged', () => window.location.reload());
     rawProv.on('accountsChanged', (a) => a.length ? window.location.reload() : disconnect());
   } catch (e) { console.error(e); }
@@ -202,52 +210,37 @@ async function checkNetwork() {
 
 function updateUIConnected() {
   document.getElementById('wlt-adr').textContent = acct.slice(0,6)+'...'+acct.slice(-4);
-  const btn = document.getElementById('con-btn');
-  btn.textContent = "Bağlantıyı Kes";
-  btn.classList.add('off');
+  const btn = document.getElementById('con-btn'); btn.textContent = "Bağlantıyı Kes"; btn.classList.add('off');
   updateAllStats();
 }
 
-function disconnect() {
-  acct = null; prov = null; sgn = null; rawProv = null;
-  localStorage.removeItem('lastWallet');
-  window.location.reload();
-}
+function disconnect() { localStorage.removeItem('lastWallet'); window.location.reload(); }
 
 async function switchToBase() {
-  try {
-    await rawProv.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] });
-  } catch (e) {
-    if (e.code === 4902) {
-      await rawProv.request({
-        method: 'wallet_addEthereumChain',
-        params: [{
-          chainId: '0x2105', chainName: 'Base Mainnet', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-          rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org']
-        }]
-      });
-    }
-  }
+  try { await rawProv.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] }); }
+  catch (e) { if (e.code === 4902) { await rawProv.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x2105', chainName: 'Base Mainnet', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org'] }] }); } }
 }
 
-// --- AUTO CONNECT ---
-window.onload = () => {
-  drawWheel(0);
-  const last = localStorage.getItem('lastWallet');
-  setTimeout(() => {
-    if (last === "browser" && window.ethereum) connectWith(window.ethereum, "browser");
-    else if (last && wlts[last]) connectWith(wlts[last].provider, last);
-  }, 800);
-};
-
-// --- LOGIC ---
+// --- GLOBAL XP & STATS ---
 async function updateAllStats() {
   if(!acct) return;
   try {
     const ck = new ethers.Contract(ADDR.CHECKIN, ABIS.CK, prov);
-    const cRes = await Promise.all([ck.userStreaks(acct), ck.totalUserCheckIns(acct), ck.lastCheckIn(acct)]);
+    const wc = new ethers.Contract(ADDR.WHEEL, ABIS.WHEEL, prov);
+    const dc = new ethers.Contract(ADDR.DICE, ABIS.DICE, prov);
+
+    const [cRes, wStats, dStats] = await Promise.all([
+      Promise.all([ck.userStreaks(acct), ck.totalUserCheckIns(acct), ck.lastCheckIn(acct)]),
+      wc.getPlayerStats(acct),
+      dc.getPlayerStats(acct)
+    ]);
+
+    // Toplam XP Hesaplama (On-chain verileri topluyoruz)
+    const totalXP = Number(wStats[0]) + Number(dStats[0]);
     document.getElementById('ck-streak').textContent = cRes[0].toString();
-    document.getElementById('ck-total').textContent = cRes[1].toString();
+    document.getElementById('ck-total').textContent = totalXP.toLocaleString();
+    document.getElementById('xp-level-global').textContent = getLevel(totalXP);
+
     const lastTime = Number(cRes[2]);
     const now = new Date();
     let reset = new Date(); reset.setHours(3,0,0,0);
@@ -255,35 +248,28 @@ async function updateAllStats() {
     const canCk = (lastTime * 1000) < reset.getTime();
     document.getElementById('ck-status').textContent = canCk ? "Bekliyor ⏳" : "Yapıldı ✅";
     document.getElementById('ck-btn').disabled = !canCk;
-
-    const wc = new ethers.Contract(ADDR.WHEEL, ABIS.WHEEL, prov);
-    const wS = await wc.getPlayerStats(acct);
-    document.getElementById('xp-total').textContent = Number(wS[0]).toLocaleString();
-    document.getElementById('xp-level').textContent = getLevel(Number(wS[0]));
-  } catch(e) {}
+  } catch(e) { console.error("Stats error", e); }
 }
 
 async function doCheckIn(){
-  setSts('ck-sts','pnd','Onaylanıyor...');
+  setSts('ck-sts','pnd','İmzalanıyor...');
   try {
     const ck = new ethers.Contract(ADDR.CHECKIN, ABIS.CK, sgn);
     const tx = await ck.checkIn({value: ethers.parseEther('0.00001')});
-    await tx.wait();
-    setSts('ck-sts','ok','Başarılı!');
-    updateAllStats();
+    await tx.wait(); setSts('ck-sts','ok','Başarılı!'); updateAllStats();
   } catch(e) { setSts('ck-sts','err','Hata!'); }
 }
 
 async function sendMsg(t){
-  setSts(t+'-sts','pnd','Gönderiliyor...');
+  setSts(t+'-sts','pnd','İmzalanıyor...');
   try {
     const c = new ethers.Contract(t==='gm'?ADDR.GM:ADDR.GN, ABIS.MSG, sgn);
     const tx = await c[t]("", {value: ethers.parseEther('0.00001')});
-    await tx.wait();
-    setSts(t+'-sts','ok','Başarılı!');
+    await tx.wait(); setSts(t+'-sts','ok','Gönderildi!');
   } catch(e) { setSts(t+'-sts','err','Hata!'); }
 }
 
+// --- OYUN GÖRSELLERİ ---
 const PIP_POS={1:[[30,30]],2:[[15,15],[45,45]],3:[[15,15],[30,30],[45,45]],4:[[15,15],[45,15],[15,45],[45,45]],5:[[15,15],[45,15],[30,30],[15,45],[45,45]],6:[[15,12],[45,12],[15,30],[45,30],[15,48],[45,48]]};
 function drawDice(s,b,v,h){
   const sv=document.getElementById(s), bx=document.getElementById(b);
@@ -293,42 +279,38 @@ function drawDice(s,b,v,h){
 
 async function rollDice(){
   if(!acct) return openModal();
-  setSts('roll-sts','pnd','Atılıyor...');
+  setSts('roll-sts','pnd','Zar atılıyor...');
   try {
     const c = new ethers.Contract(ADDR.DICE, ABIS.DICE, sgn);
     const tx = await c.rollDice({value: ethers.parseEther('0.00005')});
     const ani = setInterval(() => { drawDice('d1-svg','d1-box',Math.floor(Math.random()*6)+1); drawDice('d2-svg','d2-box',Math.floor(Math.random()*6)+1); }, 100);
-    const receipt = await tx.wait();
-    clearInterval(ani);
+    const receipt = await tx.wait(); clearInterval(ani);
     const log = c.interface.parseLog(receipt.logs[0]);
     const d1=Number(log.args[1]), d2=Number(log.args[2]);
     drawDice('d1-svg','d1-box',d1,d1==d2); drawDice('d2-svg','d2-box',d2,d1==d2);
     document.getElementById('dice-res').textContent=d1+"+"+d2+"="+(d1+d2);
-    setSts('roll-sts','ok','Zar Atıldı!');
-    updateAllStats();
+    setSts('roll-sts','ok','Zar Atıldı!'); updateAllStats();
   } catch(e) { setSts('roll-sts','err','Hata!'); }
 }
 
 function drawWheel(a){
-  const cv=document.getElementById('wheel-cv'), ctx=cv.getContext('2d'), step=Math.PI*2/16;
-  ctx.clearRect(0,0,300,300);
+  const cv=document.getElementById('wheel-cv'), ctx=cv.getContext('2d'), step=Math.PI*2/16; ctx.clearRect(0,0,300,300);
   for(let i=0; i<16; i++){
     ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,145, a+i*step, a+(i+1)*step);
     ctx.fillStyle=COLORS[i]; ctx.fill(); ctx.stroke();
-    ctx.save(); ctx.translate(150,150); ctx.rotate(a+i*step+step/2);
-    ctx.fillStyle='#fff'; ctx.font='bold 11px Space Mono'; ctx.fillText(SEGMENTS_XP[i]+" XP", 90, 5); ctx.restore();
+    ctx.save(); ctx.translate(150,150); ctx.rotate(a+i*step+step/2); ctx.fillStyle='#fff'; ctx.font='bold 11px Space Mono'; ctx.fillText(SEGMENTS_XP[i]+" XP", 90, 5); ctx.restore();
   }
 }
 
 async function spinWheel(){
   if(!acct) return openModal();
-  const btn = document.getElementById('spin-btn'); btn.disabled=true;
-  setSts('wheel-sts','pnd','İşleniyor...');
+  const btn = document.getElementById('spin-btn'); btn.disabled=true; setSts('wheel-sts','pnd','İşleniyor...');
   try {
     const c = new ethers.Contract(ADDR.WHEEL, ABIS.WHEEL, sgn);
     const tx = await c.spin({value: ethers.parseEther('0.00005')});
     const receipt = await tx.wait();
-    const log = c.interface.parseLog(receipt.logs[0]);
+    const iface = new ethers.Interface(["event WheelSpun(address indexed player, uint8 segment, uint256 xpEarned, uint256 totalXP)"]);
+    const log = iface.parseLog(receipt.logs[0]);
     const winIdx = Number(log.args[1]);
     const dur=4000, startT=performance.now(), targetA=-(winIdx*(Math.PI*2/16)+(Math.PI*2/32))-(Math.PI/2), totalR=(Math.PI*2*6)+(targetA-wheelAngle%(Math.PI*2)), startA=wheelAngle;
     function anim(now){
@@ -344,6 +326,11 @@ function openModal(){ document.getElementById('modal-bg').classList.add('on'); }
 function closeModal(){ document.getElementById('modal-bg').classList.remove('on'); }
 function setSts(i,t,h){ const el=document.getElementById(i); el.className='sts on '+t; el.innerHTML=(t==='pnd'?'<div class="spin"></div>':'')+'<span>'+h+'</span>'; }
 function getLevel(xp){ if(xp>=50000) return '👑 Elmas'; if(xp>=10000) return '💎 Platin'; if(xp>=5000) return '🥇 Altın'; if(xp>=1000) return '🥈 Gümüş'; return '🥉 Bronz'; }
+
+window.onload = () => {
+  drawWheel(0); const last = localStorage.getItem('lastWallet');
+  setTimeout(() => { if (last === "browser" && window.ethereum) connectWith(window.ethereum, "browser"); else if (last && wlts[last]) connectWith(wlts[last].provider, last); }, 800);
+};
 </script>
 </body>
 </html>
