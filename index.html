@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="talentapp:project_verification" content="9ff456b07b51ebe380e8353a57b67874a40154f96c73c1fb40349ae7dc0ec398a9fccd1eb1c70b49b32225da4afb77e055bdcda23fe607ff7daeaa940b132c9f">
+  <meta name="talentapp:project_verification" content="9ff456b07b51ebe380e8353a57b67874a40154f96c73c1fb40349ae7dc0ec398a9fccd1eb1c70b49b32225da4afb77e055bdcda23fe607ff7daeaa940b132c9f">
 <title>Base Fun dApp</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
@@ -26,9 +26,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .wlt-info{flex:1}
 .wlt-info .lbl{font-size:11px;color:var(--tx2)}
 .wlt-info .adr{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:2px}
-.bal{font-size:12px;color:var(--tx2);font-family:'Space Mono',monospace;background:var(--bg);border:.5px solid var(--bdr2);padding:4px 10px;border-radius:20px;margin-right:6px;display:none}
 .btn-con{background:var(--blue);color:#fff;border:none;padding:9px 16px;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s;white-space:nowrap}
-.btn-con:hover{background:var(--blue-dark)}.btn-con.off{background:var(--red)}
+.btn-con.off{background:var(--red)}
 .mbg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
 .mbg.on{opacity:1;pointer-events:all}
 .mdl{background:var(--bg);border:.5px solid var(--bdr2);border-radius:16px;padding:24px;width:340px;max-width:90vw;transform:translateY(14px);transition:transform .2s;max-height:80vh;overflow-y:auto}
@@ -38,8 +37,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .wopt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:.5px solid var(--bdr2);border-radius:var(--rs);cursor:pointer;background:var(--bg2);transition:border-color .15s,background .15s}
 .wopt:hover{border-color:var(--blue);background:var(--blue-light)}
 .wico{width:36px;height:36px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--bg);border:.5px solid var(--bdr)}
-.wopt .wnm{font-weight:600;font-size:14px}.wopt .wrd{font-size:11px;color:var(--tx2);margin-top:2px}
-.wopt .wbg{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--green-light);color:#065F46;white-space:nowrap}
 .mdl-cls{width:100%;padding:10px;border:none;background:transparent;color:var(--tx2);font-size:13px;cursor:pointer;border-top:.5px solid var(--bdr);font-family:'DM Sans',sans-serif;margin-top:10px}
 .tabs{display:flex;gap:2px;background:var(--bg2);border:.5px solid var(--bdr);border-radius:10px;padding:4px;margin-bottom:20px;overflow-x:auto;}
 .tab{flex:1;padding:8px 8px;border:none;background:transparent;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--tx2);transition:all .18s;white-space:nowrap;}
@@ -63,22 +60,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 @keyframes spin{to{transform:rotate(360deg)}}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sc{background:var(--bg);border:.5px solid var(--bdr);border-radius:var(--r);padding:16px;text-align:center}
-.sn{font-family:'Space Mono',monospace;font-size:32px;font-weight:700;line-height:1}
+.sn{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;line-height:1}
 .sl{font-size:12px;color:var(--tx2);margin-top:6px}
+.fgrp{margin-bottom:14px}
+.fgrp label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--tx2);margin-bottom:5px}
+.fgrp input{width:100%;background:var(--bg2);border:.5px solid var(--bdr2);border-radius:var(--rs);padding:10px 12px;font-size:13px;color:var(--tx);outline:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div class="hdr">
   <div class="logo"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="white"/><path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12c5.435 0 10.035-3.6 11.5-8.571H16v-2.857h12.857a12 12 0 000-1.143H16v-2.857h11.5C26.035 7.6 21.435 4 16 4z" fill="#0052FF"/></svg></div>
-  <div class="hdr-txt"><h1>Base Fun dApp</h1><p>Check-in & Ecosystem</p></div>
+  <div class="hdr-txt"><h1>Base Fun dApp</h1><p>Check-in & Game Hub</p></div>
   <div class="net-pill"><div class="dot" id="net-dot"></div><span id="net-name">Base Mainnet</span></div>
 </div>
 
 <div class="wlt-card">
   <div class="wlt-ico">💼</div>
   <div class="wlt-info"><div class="lbl" id="wlt-lbl">Cüzdan</div><div class="adr" id="wlt-adr">Bağlı değil</div></div>
-  <span class="bal" id="bal-tag"></span>
   <button class="btn-con" id="con-btn" onclick="openModal()">Bağlan</button>
 </div>
 
@@ -91,32 +90,57 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 
 <div class="pane on" id="pane-checkin">
   <div class="g2" style="margin-bottom:16px">
-    <div class="sc"><div class="sn" style="color:var(--blue)" id="checkin-streak">0</div><div class="sl">Günlük Seri</div></div>
-    <div class="sc"><div class="sn" style="color:var(--green)" id="checkin-total">0</div><div class="sl">Toplam Kayıt</div></div>
+    <div class="sc"><div class="sn" style="color:var(--blue)" id="checkin-streak">0</div><div class="sl">Seri</div></div>
+    <div class="sc"><div class="sn" style="color:var(--green)" id="checkin-total">0</div><div class="sl">Toplam</div></div>
   </div>
   <div class="card">
     <div class="ctitle">Günlük Takvim</div>
-    <div class="irow"><span class="il">Durum</span><span id="checkin-status" class="iv">Cüzdan Bekleniyor</span></div>
-    <div class="fbox fbox-dp" style="margin-top:10px"><span class="fl-dp">Hizmet Ücreti</span><span class="fv-dp">0.00001 ETH</span></div>
+    <div class="irow"><span class="il">Durum</span><span id="checkin-status" class="iv">Bekleniyor</span></div>
+    <div class="fbox fbox-dp" style="margin-top:10px"><span class="fl-dp">Ücret</span><span class="fv-dp">0.00001 ETH</span></div>
     <button class="abtn abtn-dp" id="checkin-btn" onclick="doCheckIn()">📅 Check-in Yap</button>
     <div class="sts" id="checkin-sts"></div>
   </div>
 </div>
 
-<div class="pane" id="pane-gm"><div class="card"><div class="ctitle">GM/GN Mesajları</div><p style="font-size:13px; color:var(--tx2)">Bu özellik ana kontratlarınıza bağlıdır.</p></div></div>
-<div class="pane" id="pane-game"><div class="card"><div class="ctitle">Zar Oyunu</div><p style="font-size:13px; color:var(--tx2)">XP kazanmak için zar atın.</p></div></div>
-<div class="pane" id="pane-wheel"><div class="card"><div class="ctitle">Şanslı Çark</div><p style="font-size:13px; color:var(--tx2)">Çarkı çevirin ve ödülleri toplayın.</p></div></div>
+<div class="pane" id="pane-gm">
+  <div class="card">
+    <div class="ctitle">☀️ GM Mesajı</div>
+    <div class="fgrp"><label>Mesajın</label><input type="text" id="gm-msg" placeholder="GM Frens!"></div>
+    <button class="abtn abtn-dp" style="background:var(--gold); color:#000" onclick="sendMsg('gm')">Güne Başla (GM)</button>
+    <div class="sts" id="gm-sts"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">🌙 GN Mesajı</div>
+    <div class="fgrp"><label>Mesajın</label><input type="text" id="gn-msg" placeholder="GN everyone!"></div>
+    <button class="abtn abtn-dp" style="background:var(--purple); color:#fff" onclick="sendMsg('gn')">Günü Bitir (GN)</button>
+    <div class="sts" id="gn-sts"></div>
+  </div>
+</div>
+
+<div class="pane" id="pane-game">
+  <div class="card" style="text-align:center">
+    <div class="ctitle">Zar Oyunu</div>
+    <div id="dice-display" style="font-size:60px; margin:20px 0">🎲</div>
+    <div class="fbox fbox-dp"><span class="fl-dp">Zar Ücreti</span><span class="fv-dp">0.00005 ETH</span></div>
+    <button class="abtn abtn-dp" onclick="playDice()">Zar At!</button>
+    <div class="sts" id="dice-sts"></div>
+  </div>
+</div>
+
+<div class="pane" id="pane-wheel">
+  <div class="card" style="text-align:center">
+    <div class="ctitle">Şanslı Çark</div>
+    <div id="wheel-display" style="font-size:60px; margin:20px 0">🎡</div>
+    <div class="fbox fbox-dp"><span class="fl-dp">Çark Ücreti</span><span class="fv-dp">0.00005 ETH</span></div>
+    <button class="abtn abtn-dp" onclick="playWheel()">Çarkı Çevir!</button>
+    <div class="sts" id="wheel-sts"></div>
+  </div>
+</div>
 
 <div class="mbg" id="modal-bg">
   <div class="mdl">
-    <h2>Cüzdan Seç</h2>
-    <div class="wlt-lst">
-      <div class="wopt" onclick="connectWallet()">
-        <div class="wico">🦊</div>
-        <div><div class="wnm">Tarayıcı Cüzdanı</div><div class="wrd">MetaMask / Coinbase</div></div>
-        <span class="wbg">Bağlan</span>
-      </div>
-    </div>
+    <h2>Cüzdan Bağla</h2>
+    <div class="wlt-lst"><div class="wopt" onclick="connectWallet()"><div class="wico">🦊</div><div><div class="wnm">MetaMask</div><div class="wrd">Injected</div></div></div></div>
     <button class="mdl-cls" onclick="closeModal()">Kapat</button>
   </div>
 </div>
@@ -124,19 +148,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 </div>
 
 <script>
-const CFG = {
-  CHAIN_ID: 8453,
-  CHECKIN_ADDR: '0xb4e5E1C7D4b0e846645F49995024D570A0A6218c',
-  CHECKIN_FEE: ethers.parseEther('0.00001'),
-  EXPLORER: 'https://basescan.org'
+// --- KONTRAT ADRESLERİN ---
+const ADDR = {
+  GM: '0xfDeb4a6C1f8a96D1817e29916047dEa53e70111E',
+  GN: '0x5A4F2A0C1134efBCe9a4Debc7B000007Cdb637B9',
+  DICE: '0xB1c153F5b8eB0AB275c4ed721606D814750EFea9',
+  WHEEL: '0x39b91858e45C33Bd6407c27449fdC773EE288cdC',
+  CHECKIN: '0xb4e5E1C7D4b0e846645F49995024D570A0A6218c'
 };
 
-const CHECKIN_ABI = [
-  "function checkIn() external payable",
-  "function userStreaks(address) view returns (uint256)",
-  "function totalUserCheckIns(address) view returns (uint256)",
-  "function lastCheckIn(address) view returns (uint256)"
-];
+const ABIS = {
+  CHECKIN: ["function checkIn() external payable", "function userStreaks(address) view returns (uint256)", "function totalUserCheckIns(address) view returns (uint256)", "function lastCheckIn(address) view returns (uint256)"],
+  MSG: ["function gm(string calldata _message) external payable", "function gn(string calldata _message) external payable"],
+  DICE: ["function rollDice() external payable"],
+  WHEEL: ["function spin() external payable"]
+};
 
 let acct, prov, sgn;
 
@@ -145,70 +171,83 @@ function switchTab(name) {
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
   document.getElementById('tab-' + name).classList.add('on');
   document.getElementById('pane-' + name).classList.add('on');
+  if(name === 'checkin' && acct) updateCheckInStats();
 }
-
-function openModal() { document.getElementById('modal-bg').classList.add('on'); }
-function closeModal() { document.getElementById('modal-bg').classList.remove('on'); }
 
 async function connectWallet() {
   if (window.ethereum) {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      acct = accounts[0];
-      prov = new ethers.BrowserProvider(window.ethereum);
-      sgn = await prov.getSigner();
-      
-      document.getElementById('wlt-adr').textContent = acct.slice(0,6) + '...' + acct.slice(-4);
-      document.getElementById('con-btn').textContent = "Kes";
-      document.getElementById('con-btn').classList.add('off');
-      closeModal();
-      updateCheckInStats();
-    } catch(e) { alert("Bağlantı hatası!"); }
-  } else { alert("Cüzdan bulunamadı!"); }
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    acct = accounts[0];
+    prov = new ethers.BrowserProvider(window.ethereum);
+    sgn = await prov.getSigner();
+    document.getElementById('wlt-adr').textContent = acct.slice(0,6) + '...' + acct.slice(-4);
+    document.getElementById('con-btn').textContent = "Kes";
+    document.getElementById('modal-bg').classList.remove('on');
+    updateCheckInStats();
+  }
 }
 
 async function updateCheckInStats() {
-  if(!acct) return;
-  try {
-    const contract = new ethers.Contract(CFG.CHECKIN_ADDR, CHECKIN_ABI, prov);
-    const streak = await contract.userStreaks(acct);
-    const total = await contract.totalUserCheckIns(acct);
-    const last = await contract.lastCheckIn(acct);
-    
-    document.getElementById('checkin-streak').textContent = streak.toString();
-    document.getElementById('checkin-total').textContent = total.toString();
-    
-    const lastDate = new Date(Number(last) * 1000);
-    const isToday = lastDate.toDateString() === new Date().toDateString() && Number(last) > 0;
-    
-    document.getElementById('checkin-status').textContent = isToday ? "Bugün Yapıldı ✅" : "Bekliyor ⏳";
-    if(isToday) {
-        const btn = document.getElementById('checkin-btn');
-        btn.disabled = true;
-        btn.textContent = "Yarın Tekrar Gel";
-    }
-  } catch(e) { console.error("Stats Error:", e); }
+  const contract = new ethers.Contract(ADDR.CHECKIN, ABIS.CHECKIN, prov);
+  const streak = await contract.userStreaks(acct);
+  const total = await contract.totalUserCheckIns(acct);
+  const last = await contract.lastCheckIn(acct);
+  document.getElementById('checkin-streak').textContent = streak.toString();
+  document.getElementById('checkin-total').textContent = total.toString();
+  const isToday = new Date(Number(last)*1000).toDateString() === new Date().toDateString() && Number(last) > 0;
+  document.getElementById('checkin-status').textContent = isToday ? "Bugün yapıldı ✅" : "Bekliyor ⏳";
+  if(isToday) document.getElementById('checkin-btn').disabled = true;
 }
 
 async function doCheckIn() {
   if(!acct) return openModal();
-  const btn = document.getElementById('checkin-btn');
-  btn.disabled = true;
-  setSts('checkin-sts', 'pnd', 'Cüzdan onayı bekleniyor...');
-  
+  setSts('checkin-sts', 'pnd', 'Onaylanıyor...');
   try {
-    const contract = new ethers.Contract(CFG.CHECKIN_ADDR, CHECKIN_ABI, sgn);
-    const tx = await contract.checkIn({ value: CFG.CHECKIN_FEE });
-    setSts('checkin-sts', 'pnd', 'İşlem onaylanıyor...');
+    const contract = new ethers.Contract(ADDR.CHECKIN, ABIS.CHECKIN, sgn);
+    const tx = await contract.checkIn({ value: ethers.parseEther('0.00001') });
     await tx.wait();
-    setSts('checkin-sts', 'ok', 'Check-in başarılı! Serin arttı.');
+    setSts('checkin-sts', 'ok', 'Başarılı!');
     updateCheckInStats();
-  } catch(e) {
-    setSts('checkin-sts', 'err', 'Hata: ' + (e.reason || "İşlem başarısız"));
-    btn.disabled = false;
-  }
+  } catch(e) { setSts('checkin-sts', 'err', 'Hata!'); }
 }
 
+async function sendMsg(type) {
+  if(!acct) return openModal();
+  const msg = document.getElementById(type + '-msg').value;
+  setSts(type + '-sts', 'pnd', 'Gönderiliyor...');
+  try {
+    const addr = type === 'gm' ? ADDR.GM : ADDR.GN;
+    const contract = new ethers.Contract(addr, ABIS.MSG, sgn);
+    const tx = await contract[type](msg, { value: ethers.parseEther('0.00001') });
+    await tx.wait();
+    setSts(type + '-sts', 'ok', 'Gönderildi!');
+  } catch(e) { setSts(type + '-sts', 'err', 'Hata!'); }
+}
+
+async function playDice() {
+  if(!acct) return openModal();
+  setSts('dice-sts', 'pnd', 'Zar atılıyor...');
+  try {
+    const contract = new ethers.Contract(ADDR.DICE, ABIS.DICE, sgn);
+    const tx = await contract.rollDice({ value: ethers.parseEther('0.00005') });
+    await tx.wait();
+    setSts('dice-sts', 'ok', 'Zar atıldı! Basescan\'den kontrol et.');
+  } catch(e) { setSts('dice-sts', 'err', 'Hata!'); }
+}
+
+async function playWheel() {
+  if(!acct) return openModal();
+  setSts('wheel-sts', 'pnd', 'Çark dönüyor...');
+  try {
+    const contract = new ethers.Contract(ADDR.WHEEL, ABIS.WHEEL, sgn);
+    const tx = await contract.spin({ value: ethers.parseEther('0.00005') });
+    await tx.wait();
+    setSts('wheel-sts', 'ok', 'Çark çevrildi!');
+  } catch(e) { setSts('wheel-sts', 'err', 'Hata!'); }
+}
+
+function openModal() { document.getElementById('modal-bg').classList.add('on'); }
+function closeModal() { document.getElementById('modal-bg').classList.remove('on'); }
 function setSts(id, type, html) {
   const el = document.getElementById(id);
   el.className = 'sts on ' + type;
